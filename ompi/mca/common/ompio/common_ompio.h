@@ -23,8 +23,13 @@
 
 #include "ompi/mca/common/ompio/common_ompio_print_queue.h"
 #include "ompi/mca/io/ompio/io_ompio.h"
+#include "ompi/mca/common/ompio/io_ompio_logging.h"
 
 OMPI_DECLSPEC int mca_common_ompio_file_write (mca_io_ompio_file_t *fh, const void *buf,  int count,
+                                               struct ompi_datatype_t *datatype, 
+                                               ompi_status_public_t *status);
+
+OMPI_DECLSPEC int mca_common_ompio_file_write2 (mca_io_ompio_file_t *fh, const void *buf,  int count,
                                                struct ompi_datatype_t *datatype, 
                                                ompi_status_public_t *status);
 
@@ -53,6 +58,9 @@ OMPI_DECLSPEC int mca_common_ompio_build_io_array ( mca_io_ompio_file_t *fh, int
 
 
 OMPI_DECLSPEC int mca_common_ompio_file_read (mca_io_ompio_file_t *fh,  void *buf,  int count,
+                                              struct ompi_datatype_t *datatype, ompi_status_public_t *status);
+
+OMPI_DECLSPEC int mca_common_ompio_file_read2 (mca_io_ompio_file_t *fh,  void *buf,  int count,
                                               struct ompi_datatype_t *datatype, ompi_status_public_t *status);
 
 OMPI_DECLSPEC int mca_common_ompio_file_read_at (mca_io_ompio_file_t *fh, OMPI_MPI_OFFSET_TYPE offset,  void *buf,

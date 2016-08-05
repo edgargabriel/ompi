@@ -40,6 +40,10 @@
 #include "common_ompio.h"
 #include "ompi/mca/topo/topo.h"
 
+#include "io_ompio_logging.h"
+#define LOGGING 1 
+
+
 int mca_common_ompio_file_open (ompi_communicator_t *comm,
                               const char *filename,
                               int amode,
@@ -91,8 +95,16 @@ int mca_common_ompio_file_open (ompi_communicator_t *comm,
     ompio_fh->f_info   = info;
     ompio_fh->f_atomicity = 0;
 
-    mca_common_ompio_set_file_defaults (ompio_fh);
+
     ompio_fh->f_filename = filename;
+#ifdef LOGGING
+    if ( true == use_sharedfp ) {
+        io_ompio_log (ompio_fh, IO_OMPIO_LOG_EVENT_OPEN );
+    }
+#endif
+
+
+    mca_common_ompio_set_file_defaults (ompio_fh);
 
     ompio_fh->f_split_coll_req    = NULL;
     ompio_fh->f_split_coll_in_use = false;
@@ -211,7 +223,6 @@ int mca_common_ompio_file_open (ompi_communicator_t *comm,
     }
 
 
-
     return OMPI_SUCCESS;
 
     fn_fail:
@@ -227,6 +238,11 @@ int mca_common_ompio_file_close (mca_io_ompio_file_t *ompio_fh)
     int ret = OMPI_SUCCESS;
     int delete_flag = 0;
     char name[256];
+    
+#ifdef LOGGING
+    io_ompio_log (ompio_fh, IO_OMPIO_LOG_EVENT_CLOSE );
+#endif
+    
 
     if(mca_io_ompio_coll_timing_info){
         strcpy (name, "WRITE");

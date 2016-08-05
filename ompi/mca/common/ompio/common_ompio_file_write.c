@@ -35,7 +35,111 @@
 #include "math.h"
 #include <unistd.h>
 
+#include "io_ompio_logging.h"
+#define LOGGING 1 
+
 int mca_common_ompio_file_write (mca_io_ompio_file_t *fh,
+			       const void *buf,
+			       int count,
+			       struct ompi_datatype_t *datatype,
+			       ompi_status_public_t *status)
+{
+    int ret = OMPI_SUCCESS;
+    int index = 0;
+    int cycles = 0;
+
+    uint32_t iov_count = 0;
+    struct iovec *decoded_iov = NULL;
+    size_t bytes_per_cycle=0;
+    size_t total_bytes_written = 0;
+    size_t max_data=0, real_bytes_written=0;
+    ssize_t ret_code=0;
+    int i = 0; /* index into the decoded iovec of the buffer */
+    int j = 0; /* index into the file view iovec */
+
+    if ( 0 == count ) {
+	if ( MPI_STATUS_IGNORE != status ) {
+	    status->_ucount = 0;
+	}
+	return ret;
+    }
+
+#ifdef LOGGING
+    OMPI_MPI_OFFSET_TYPE offset, disp;
+    long prevpos, newpos;
+    mca_common_ompio_file_get_position (fh, &offset );
+    mca_io_ompio_file_get_byte_offset (fh->f_fh, offset, &disp);
+    prevpos = (long) disp;
+#endif
+
+    ompi_io_ompio_decode_datatype (fh,
+                                   datatype,
+                                   count,
+                                   buf,
+                                   &max_data,
+                                   &decoded_iov,
+                                   &iov_count);
+
+    if ( -1 == mca_io_ompio_cycle_buffer_size ) {
+	bytes_per_cycle = max_data;
+    }
+    else {
+	bytes_per_cycle = mca_io_ompio_cycle_buffer_size;
+    }
+    cycles = ceil((float)max_data/bytes_per_cycle);
+
+#if 0
+    printf ("Bytes per Cycle: %d   Cycles: %d\n", bytes_per_cycle, cycles);
+#endif
+
+    j = fh->f_index_in_file_view;
+    for (index = 0; index < cycles; index++) {
+	mca_common_ompio_build_io_array ( fh,
+                                          index,
+                                          cycles,
+                                          bytes_per_cycle,
+                                          max_data,
+                                          iov_count,
+                                          decoded_iov,
+                                          &i,
+                                          &j,
+                                          &total_bytes_written);
+
+        if (fh->f_num_of_io_entries) {
+            ret_code =fh->f_fbtl->fbtl_pwritev (fh);
+	    if ( 0<= ret_code ) {
+		real_bytes_written+= (size_t)ret_code;
+	    }
+        }
+
+        fh->f_num_of_io_entries = 0;
+        if (NULL != fh->f_io_array) {
+            free (fh->f_io_array);
+            fh->f_io_array = NULL;
+        }
+    }
+
+    if (NULL != decoded_iov) {
+        free (decoded_iov);
+        decoded_iov = NULL;
+    }
+
+    if ( MPI_STATUS_IGNORE != status ) {
+	status->_ucount = real_bytes_written;
+    }
+
+#ifdef LOGGING
+    newpos  = (long)offset + real_bytes_written;
+    offset = (OMPI_MPI_OFFSET_TYPE) newpos / fh->f_etype_size;
+    mca_io_ompio_file_get_byte_offset (fh->f_fh, offset, &disp);
+    newpos = (long) disp;
+    io_ompio_log (fh, IO_OMPIO_LOG_EVENT_UPDATE, prevpos, newpos, IO_OMPIO_LOG_WRITE);
+#endif
+
+    return ret;
+}
+
+int mca_common_ompio_file_write2 (mca_io_ompio_file_t *fh,
 			       const void *buf,
 			       int count,
 			       struct ompi_datatype_t *datatype,
@@ -120,6 +224,7 @@ int mca_common_ompio_file_write (mca_io_ompio_file_t *fh,
     return ret;
 }
 
+
 int mca_common_ompio_file_write_at (mca_io_ompio_file_t *fh,
 				  OMPI_MPI_OFFSET_TYPE offset,
 				  const void *buf,
@@ -132,7 +237,7 @@ int mca_common_ompio_file_write_at (mca_io_ompio_file_t *fh,
     mca_common_ompio_file_get_position (fh, &prev_offset );
 
     mca_common_ompio_set_explicit_offset (fh, offset);
-    ret = mca_common_ompio_file_write (fh,
+    ret = mca_common_ompio_file_write2 (fh,
                                      buf,
                                      count,
                                      datatype,

@@ -21,10 +21,12 @@
 if OMPI_PROVIDE_MPI_FILE_INTERFACE
 
 headers = \
+	io_ompio_logging.h \
 	common_ompio_print_queue.h \
 	common_ompio.h
 
 sources = \
+	io_ompio_logging.c        \
 	common_ompio_print_queue.c \
 	common_ompio_file_open.c   \
 	common_ompio_file_view.c   \

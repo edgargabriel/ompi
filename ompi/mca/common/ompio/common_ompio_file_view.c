@@ -26,6 +26,10 @@
 #include "common_ompio.h"
 #include "ompi/mca/fcoll/base/base.h"
 
+#include "io_ompio_logging.h"
+#define LOGGING 1 
+
+
 static OMPI_MPI_OFFSET_TYPE get_contiguous_chunk_size (mca_io_ompio_file_t *);
 static int datatype_duplicate (ompi_datatype_t *oldtype, ompi_datatype_t **newtype );
 static int datatype_duplicate  (ompi_datatype_t *oldtype, ompi_datatype_t **newtype )
@@ -123,6 +127,13 @@ int mca_common_ompio_set_view (mca_io_ompio_file_t *fh,
 
     opal_datatype_get_extent(&newfiletype->super, &lb, &fh->f_view_extent);
     opal_datatype_type_ub   (&newfiletype->super, &ub);
+
+#ifdef LOGGING
+    io_ompio_log ( fh, IO_OMPIO_LOG_EVENT_FVIEW_SET );
+
+#endif
+
+
     opal_datatype_type_size (&etype->super, &fh->f_etype_size);
     opal_datatype_type_size (&newfiletype->super, &fh->f_view_size);
     datatype_duplicate (etype, &fh->f_etype);
