@@ -547,7 +547,9 @@ OMPI_DECLSPEC int ompi_io_ompio_set_aggregator_props (struct mca_io_ompio_file_t
                                                       size_t bytes_per_proc);
 
 
-int mca_io_ompio_cart_based_grouping(mca_io_ompio_file_t *ompio_fh);
+int mca_io_ompio_cart_based_grouping(mca_io_ompio_file_t *ompio_fh, 
+                                     int *num_groups,
+                                     contg *contg_groups);
 
 int mca_io_ompio_fview_based_grouping(mca_io_ompio_file_t *fh,
 		                                    int *num_groups,

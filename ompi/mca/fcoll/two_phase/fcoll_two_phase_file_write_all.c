@@ -139,6 +139,8 @@ double comm_time = 0.0, start_comm_time = 0.0, end_comm_time = 0.0;
 double exch_write = 0.0, start_exch = 0.0, end_exch = 0.0;
 #endif
 
+int mca_io_base_check_params ( size_t, size_t, int, int);
+
 int
 mca_fcoll_two_phase_file_write_all (mca_io_ompio_file_t *fh,
                                     const void *buf,
@@ -237,7 +239,10 @@ mca_fcoll_two_phase_file_write_all (mca_io_ompio_file_t *fh,
     if (two_phase_num_io_procs > fh->f_size){
 	two_phase_num_io_procs = fh->f_size;
     }
-
+    if ( fh->f_rank == 0 ) {
+        if ( mca_io_base_check_params ( -1, -1, -1, two_phase_num_io_procs) )
+            printf("fcoll_two_phase_file_write_all: no. of aggr. is %d\n", two_phase_num_io_procs);
+    }
 #if DEBUG_ON
     printf("Number of aggregators : %ld\n", two_phase_num_io_procs);
 #endif

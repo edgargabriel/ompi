@@ -61,6 +61,10 @@ struct avail_io_t {
 };
 typedef struct avail_io_t avail_io_t;
 
+static size_t st_view_size=0, st_cc_size=0;
+static int st_bytes_per_agg=0, st_num_aggregators=0;
+
+
 /*
  * Local functions
  */
@@ -84,7 +88,35 @@ static int module_init(ompi_file_t *file);
  * Stuff for the OBJ interface
  */
 static OBJ_CLASS_INSTANCE(avail_io_t, opal_list_item_t, NULL, NULL);
-
+int mca_io_base_check_params ( size_t view_size, size_t cc_size, int bytes_per_agg, int num_agg )
+{
+    int flag=0; // false
+    if ( view_size != -1 ) {
+	if ( view_size  != st_view_size ) {
+	    st_view_size = view_size;
+	    flag = 1;
+	}
+    }
+    if ( cc_size != -1 ) {
+	if ( cc_size  != st_cc_size ) {
+	    st_cc_size = cc_size;
+	    flag = 1;
+	}
+    }
+    if ( bytes_per_agg != -1 ) {
+	if ( bytes_per_agg  != st_bytes_per_agg ) {
+	    st_bytes_per_agg = bytes_per_agg;
+	    flag = 1;
+	}
+    }
+    if ( num_agg != -1 ) {
+	if ( num_agg  != st_num_aggregators ) {
+	    st_num_aggregators = num_agg;
+	    flag = 1;
+	}
+    }
+    return flag;
+}
 
 /*
  * This function is called at the initialization time of every

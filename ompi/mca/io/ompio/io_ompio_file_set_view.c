@@ -32,6 +32,7 @@
 #include "ompi/mca/pml/pml.h"
 #include "opal/datatype/opal_convertor.h"
 #include "ompi/datatype/ompi_datatype.h"
+#include "ompi/mca/topo/topo.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -40,6 +41,8 @@
 
 static OMPI_MPI_OFFSET_TYPE get_contiguous_chunk_size (mca_io_ompio_file_t *);
 static int datatype_duplicate (ompi_datatype_t *oldtype, ompi_datatype_t **newtype );
+int mca_io_base_check_params ( size_t, size_t, int, int);
+
 static int datatype_duplicate  (ompi_datatype_t *oldtype, ompi_datatype_t **newtype )
 {
     ompi_datatype_t *type;
@@ -70,7 +73,7 @@ int mca_io_ompio_set_view_internal(mca_io_ompio_file_t *fh,
 {
 
     size_t max_data = 0;
-    int i;
+    int i, ret=OMPI_SUCCESS;
     int num_groups = 0;
     contg *contg_groups;
 
@@ -185,12 +188,33 @@ int mca_io_ompio_set_view_internal(mca_io_ompio_file_t *fh,
         }
     }
     else {
-        if( OMPI_SUCCESS != mca_io_ompio_simple_grouping(fh,
-                                                         &num_groups,
-                                                         contg_groups)){
-            opal_output(1, "mca_io_ompio_simple_grouping() failed\n");
-            free(contg_groups);
-            return OMPI_ERROR;
+	int done=0;
+        int ndims;
+        if ( fh->f_comm->c_flags & OMPI_COMM_CART ){
+            ret = fh->f_comm->c_topo->topo.cart.cartdim_get( fh->f_comm, &ndims);
+            if ( OMPI_SUCCESS != ret ){
+                goto exit;
+            }
+            if ( ndims > 1 ) { 
+                ret = mca_io_ompio_cart_based_grouping( fh, 
+                                                        &num_groups, 
+                                                        contg_groups);
+                if (OMPI_SUCCESS != ret ) {
+                    opal_output(1, "mca_common_ompio_set_view: mca_io_ompio_cart_based_grouping failed\n");
+                    goto exit;
+                }
+                done=1;
+            }
+        }
+
+        if ( !done ) {
+            ret = mca_io_ompio_simple_grouping(fh,
+                                               &num_groups,
+                                               contg_groups);
+            if ( OMPI_SUCCESS != ret ){
+                opal_output(1, "mca_common_ompio_set_view: mca_io_ompio_simple_grouping failed\n");
+                goto exit;
+            }
         }
     }
     
@@ -198,10 +222,6 @@ int mca_io_ompio_set_view_internal(mca_io_ompio_file_t *fh,
     mca_io_ompio_finalize_initial_grouping(fh,
                                            num_groups,
                                            contg_groups);
-    for( i = 0; i < fh->f_size; i++){
-       free(contg_groups[i].procs_in_contg_group);
-    }
-    free(contg_groups);
 
     if ( etype == filetype                              &&
 	 ompi_datatype_is_predefined (filetype )        &&
@@ -215,7 +235,14 @@ int mca_io_ompio_set_view_internal(mca_io_ompio_file_t *fh,
         return OMPI_ERROR;
     }
 
-    return OMPI_SUCCESS;
+exit:
+    for( i = 0; i < fh->f_size; i++){
+       free(contg_groups[i].procs_in_contg_group);
+    }
+    free(contg_groups);
+
+
+    return ret;
 }
 
 int mca_io_ompio_file_set_view (ompi_file_t *fp,
@@ -351,6 +378,41 @@ int mca_io_ompio_simple_grouping(mca_io_ompio_file_t *fh,
         stripe_size = OMPIO_DEFAULT_STRIPE_SIZE;
     }
 
+    if ( fh->f_rank == 0 ) {
+        if ( mca_io_base_check_params ( fh->f_view_size, fh->f_cc_size, fh->f_bytes_per_agg, -1 ) ) {
+	    if ( fh->f_view_size == MCA_IO_DEFAULT_FILE_VIEW_SIZE && MCA_IO_DEFAULT_FILE_VIEW_SIZE == fh->f_cc_size ) {
+		/* This is the default file view, not interested in it */
+	    }
+	    else {
+		printf("fstype=%d view_size=%ld cc_size=%ld stripe_size=%ld\n", fh->f_fstype, fh->f_view_size, 
+		       fh->f_cc_size, stripe_size);
+	    }
+        }
+    }
+
+    if ( 0 != fh->f_cc_size && stripe_size > fh->f_cc_size ) {
+        group_size  = (((int)stripe_size/(int)fh->f_cc_size) > fh->f_size ) ? fh->f_size : ((int)stripe_size/(int)fh->f_cc_size);
+	if ( group_size == 0 ) MPI_Abort ( fh->f_comm, 1 );
+        *num_groups = fh->f_size / group_size;
+    }
+    else if ( 0!= fh->f_cc_size ) {
+        *num_groups = (fh->f_view_size * fh->f_size ) / fh->f_bytes_per_agg;
+        if ( *num_groups < 1 ) {
+            *num_groups = 1;
+        }
+        if ( *num_groups > fh->f_size ) {
+            *num_groups = fh->f_size;
+        }
+
+        group_size = fh->f_size / *num_groups;
+    }
+    else {
+        *num_groups = fh->f_size/OMPIO_CONTG_FACTOR > 0 ? (fh->f_size/OMPIO_CONTG_FACTOR) : 1 ;
+        group_size  = OMPIO_CONTG_FACTOR;
+    } 
+
+
+#ifdef OLD_LOGIC
     if ( 0 != fh->f_cc_size && stripe_size > fh->f_cc_size ) {
         group_size  = (((int)stripe_size/(int)fh->f_cc_size) > fh->f_size ) ? fh->f_size : ((int)stripe_size/(int)fh->f_cc_size);
         *num_groups = fh->f_size / group_size;
@@ -363,6 +425,7 @@ int mca_io_ompio_simple_grouping(mca_io_ompio_file_t *fh,
         *num_groups = fh->f_size;
         group_size  = 1;
     }
+#endif
 
     for ( k=0, p=0; p<*num_groups; p++ ) {
         if ( p == (*num_groups - 1) ) {
