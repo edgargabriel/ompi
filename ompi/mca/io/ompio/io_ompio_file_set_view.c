@@ -39,7 +39,7 @@
 #include <unistd.h>
 #include "io_ompio.h"
 
-static OMPI_MPI_OFFSET_TYPE get_contiguous_chunk_size (mca_io_ompio_file_t *);
+static OMPI_MPI_OFFSET_TYPE get_contiguous_chunk_size (mca_io_ompio_file_t *, int flag );
 static int datatype_duplicate (ompi_datatype_t *oldtype, ompi_datatype_t **newtype );
 int mca_io_base_check_params ( size_t, size_t, int, int);
 
@@ -151,7 +151,12 @@ int mca_io_ompio_set_view_internal(mca_io_ompio_file_t *fh,
     // in orig_file type, No need to set args on this one.
     ompi_datatype_duplicate (newfiletype, &fh->f_filetype);
 
-    fh->f_cc_size = get_contiguous_chunk_size (fh);
+    if ( SIMPLE_PLUS == mca_io_ompio_grouping_option) {
+        fh->f_cc_size = get_contiguous_chunk_size (fh, 1);
+    }
+    else {
+        fh->f_cc_size = get_contiguous_chunk_size (fh, 0);
+    }
 
     if (opal_datatype_is_contiguous_memory_layout(&etype->super,1)) {
         if (opal_datatype_is_contiguous_memory_layout(&filetype->super,1) &&
@@ -178,7 +183,7 @@ int mca_io_ompio_set_view_internal(mca_io_ompio_file_t *fh,
        }
     }
 
-    if ( SIMPLE != mca_io_ompio_grouping_option ) {
+    if ( SIMPLE != mca_io_ompio_grouping_option || SIMPLE_PLUS != mca_io_ompio_grouping_option ) {
         if( OMPI_SUCCESS != mca_io_ompio_fview_based_grouping(fh,
                                                           &num_groups,
                                                           contg_groups)){
@@ -293,7 +298,7 @@ int mca_io_ompio_file_get_view (struct ompi_file_t *fp,
     return OMPI_SUCCESS;
 }
 
-OMPI_MPI_OFFSET_TYPE get_contiguous_chunk_size (mca_io_ompio_file_t *fh)
+OMPI_MPI_OFFSET_TYPE get_contiguous_chunk_size (mca_io_ompio_file_t *fh, int flag)
 {
     int uniform = 0;
     OMPI_MPI_OFFSET_TYPE avg[3] = {0,0,0};
@@ -316,52 +321,58 @@ OMPI_MPI_OFFSET_TYPE get_contiguous_chunk_size (mca_io_ompio_file_t *fh)
             }
         }
     }
-    if ( 0 != fh->f_iov_count ) {
-	avg[0] = avg[0]/fh->f_iov_count;
-    }
-    avg[1] = (OMPI_MPI_OFFSET_TYPE) fh->f_iov_count;
-    avg[2] = (OMPI_MPI_OFFSET_TYPE) uniform;
-
-    fh->f_comm->c_coll.coll_allreduce (avg,
-                                       global_avg,
-                                       3,
-                                       OMPI_OFFSET_DATATYPE,
-                                       MPI_SUM,
-                                       fh->f_comm,
-                                       fh->f_comm->c_coll.coll_allreduce_module);
-    global_avg[0] = global_avg[0]/fh->f_size;
-    global_avg[1] = global_avg[1]/fh->f_size;
-
-#if 0 
-    /* Disabling the feature since we are not using it anyway. Saves us one allreduce operation. */
-    int global_uniform=0;
-
-    if ( global_avg[0] == avg[0] &&
-	 global_avg[1] == avg[1] &&
-	 0 == avg[2]             &&
-	 0 == global_avg[2] ) {
-	uniform = 0;
+    if ( flag ) {
+        global_avg[0] = MCA_IO_DEFAULT_FILE_VIEW_SIZE;
     }
     else {
-	uniform = 1;
-    }
-
-    /* second confirmation round to see whether all processes agree
-    ** on having a uniform file view or not
-    */
-    fh->f_comm->c_coll.coll_allreduce (&uniform,
-				       &global_uniform,
-				       1,
-				       MPI_INT,
-				       MPI_MAX,
-				       fh->f_comm,
-				       fh->f_comm->c_coll.coll_allreduce_module);
-
-    if ( 0 == global_uniform  ){
-	/* yes, everybody agrees on having a uniform file view */
-	fh->f_flags |= OMPIO_UNIFORM_FVIEW;
-    }
+        if ( 0 != fh->f_iov_count ) {
+            avg[0] = avg[0]/fh->f_iov_count;
+        }
+        avg[1] = (OMPI_MPI_OFFSET_TYPE) fh->f_iov_count;
+        avg[2] = (OMPI_MPI_OFFSET_TYPE) uniform;
+        
+        fh->f_comm->c_coll.coll_allreduce (avg,
+                                           global_avg,
+                                           3,
+                                           OMPI_OFFSET_DATATYPE,
+                                           MPI_SUM,
+                                           fh->f_comm,
+                                           fh->f_comm->c_coll.coll_allreduce_module);
+        global_avg[0] = global_avg[0]/fh->f_size;
+        global_avg[1] = global_avg[1]/fh->f_size;
+        
+#if 0 
+        /* Disabling the feature since we are not using it anyway. Saves us one allreduce operation. */
+        int global_uniform=0;
+        
+        if ( global_avg[0] == avg[0] &&
+             global_avg[1] == avg[1] &&
+             0 == avg[2]             &&
+             0 == global_avg[2] ) {
+            uniform = 0;
+        }
+        else {
+            uniform = 1;
+        }
+        
+        /* second confirmation round to see whether all processes agree
+        ** on having a uniform file view or not
+        */
+        fh->f_comm->c_coll.coll_allreduce (&uniform,
+                                           &global_uniform,
+                                           1,
+                                           MPI_INT,
+                                           MPI_MAX,
+                                           fh->f_comm,
+                                           fh->f_comm->c_coll.coll_allreduce_module);
+        
+        if ( 0 == global_uniform  ){
+            /* yes, everybody agrees on having a uniform file view */
+            fh->f_flags |= OMPIO_UNIFORM_FVIEW;
+        }
 #endif
+    }
+
     return global_avg[0];
 }
 
