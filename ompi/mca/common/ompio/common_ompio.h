@@ -226,6 +226,12 @@ struct ompio_file_t {
     mca_common_ompio_generate_current_file_view_fn_t f_generate_current_file_view;
 
     mca_common_ompio_get_mca_parameter_value_fn_t          f_get_mca_parameter_value;
+
+    /* for composix module */
+    int annotation_fd;
+    char *annotation_file_name;
+    OMPI_MPI_OFFSET_TYPE current_offset;
+
 };
 typedef struct ompio_file_t ompio_file_t;
 

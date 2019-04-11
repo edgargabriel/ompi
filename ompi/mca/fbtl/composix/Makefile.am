@@ -52,4 +52,6 @@ sources = \
         fbtl_composix_ipwritev.c \
 	fbtl_composix_lock.c \
 	fbtl_composix_compression.c \
-	fbtl_composix_crc32.c
+	fbtl_composix_debug.c \
+	fbtl_composix_sz.c \
+	fbtl_composix_sz_crc32.c 

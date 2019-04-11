@@ -80,6 +80,8 @@ struct mca_fbtl_composix_request_data_t {
 };
 typedef struct mca_fbtl_composix_request_data_t mca_fbtl_composix_request_data_t;
 
+void free_c_iovec(struct iovec *i_c, int use_mask, char *allocation_mask, int n);
+
 /* Right now statically defined, will become a configure check */
 #define FBTL_POSIX_HAVE_AIO 1
 

@@ -238,3 +238,33 @@ void mca_fbtl_composix_request_free ( mca_ompio_request_t *req)
 #endif
   return;
 }
+
+
+//deallocate buffers within iovectors used for compression/decompression
+void free_c_iovec(struct iovec *i_c, int use_mask, char *allocation_mask, int n)
+{
+
+	int i;
+
+	if(use_mask) {
+
+		for(i = 0; i < n; i++) {
+			if(1 == allocation_mask[i]) {
+				free((i_c[i].iov_base));
+			}     
+		}
+
+
+	}
+	else {
+
+
+		for(i = 0; i < n; i++) {
+
+			free((i_c[i].iov_base));
+		}
+
+	}
+}
+
+

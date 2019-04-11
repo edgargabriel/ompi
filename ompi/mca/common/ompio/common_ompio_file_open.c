@@ -39,6 +39,8 @@
 
 #include <unistd.h>
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
 #include "common_ompio.h"
 #include "ompi/mca/topo/topo.h"
 
@@ -99,6 +101,14 @@ int mca_common_ompio_file_open (ompi_communicator_t *comm,
     ompio_fh->f_get_mca_parameter_value=get_mca_parameter_value_fn;
 
     ompio_fh->f_filename = filename;
+    char *ann_ext = ".ann";
+    size_t ann_fn_len = strlen(filename) + strlen(ann_ext) + 1;
+    char *ann_name = (char *) calloc(1,ann_fn_len);
+    //strcat(ann_name, filename);
+    //strcat(ann_name, ann_ext); 
+    sprintf(ann_name, "%s.ann", filename);
+    ompio_fh->annotation_file_name = ann_name;
+    ompio_fh->annotation_fd = 0;
     mca_common_ompio_set_file_defaults (ompio_fh);
 
     ompio_fh->f_split_coll_req    = NULL;
