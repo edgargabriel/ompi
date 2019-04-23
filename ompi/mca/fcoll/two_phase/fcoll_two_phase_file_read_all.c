@@ -10,7 +10,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Copyright (c) 2004-2005 The Regents of the University of California.
  *                         All rights reserved.
- * Copyright (c) 2008-2014 University of Houston. All rights reserved.
+ * Copyright (c) 2008-2019 University of Houston. All rights reserved.
  * Copyright (c) 2015      Cisco Systems, Inc.  All rights reserved.
  * Copyright (c) 2015      Los Alamos National Security, LLC. All rights
  *                         reserved.
@@ -153,6 +153,7 @@ mca_fcoll_two_phase_file_read_all (ompio_file_t *fh,
 	ret =   mca_common_ompio_decode_datatype ((struct ompio_file_t *)fh,
 				                  datatype,
 				                  count,
+                                                  "native",
 				                  buf,
 				                  &max_data,
 				                  &temp_iov,

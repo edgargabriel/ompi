@@ -59,7 +59,7 @@ int mca_common_ompio_file_write (ompio_file_t *fh,
     int j = 0; /* index into the file view iovec */
 
     if (fh->f_amode & MPI_MODE_RDONLY){
-//      opal_output(10, "Improper use of FILE Mode, Using RDONLY for write!\n");
+        // opal_output(10, "Improper use of FILE Mode, Using RDONLY for write!\n");
         ret = MPI_ERR_READ_ONLY;
       return ret;
     }
@@ -89,6 +89,7 @@ int mca_common_ompio_file_write (ompio_file_t *fh,
         mca_common_ompio_decode_datatype (fh,
                                           datatype,
                                           count,
+                                          "native",
                                           buf,
                                           &max_data,
                                           &decoded_iov,
@@ -97,7 +98,8 @@ int mca_common_ompio_file_write (ompio_file_t *fh,
 #else
     mca_common_ompio_decode_datatype (fh,
                                       datatype,
-                                      count,
+                                      count, 
+                                      "native",
                                       buf,
                                       &max_data,
                                       &decoded_iov,
@@ -250,6 +252,7 @@ int mca_common_ompio_file_iwrite (ompio_file_t *fh,
             mca_common_ompio_decode_datatype (fh,
                                               datatype,
                                               count,
+                                              "native",
                                               buf,
                                               &max_data,
                                               &decoded_iov,
@@ -259,6 +262,7 @@ int mca_common_ompio_file_iwrite (ompio_file_t *fh,
         mca_common_ompio_decode_datatype (fh,
                                           datatype,
                                           count,
+                                          "native",
                                           buf,
                                           &max_data,
                                           &decoded_iov,

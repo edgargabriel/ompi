@@ -328,6 +328,7 @@ OMPI_DECLSPEC int mca_common_ompio_set_view (ompio_file_t *fh,  OMPI_MPI_OFFSET_
 OMPI_DECLSPEC int mca_common_ompio_decode_datatype (struct ompio_file_t *fh,
                                                     struct ompi_datatype_t *datatype,
                                                     int count,
+                                                    char *datarep,
                                                     const void *buf,
                                                     size_t *max_data,
                                                     struct iovec **iov,

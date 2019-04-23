@@ -9,7 +9,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Copyright (c) 2004-2005 The Regents of the University of California.
  *                         All rights reserved.
- * Copyright (c) 2008-2018 University of Houston. All rights reserved.
+ * Copyright (c) 2008-2019 University of Houston. All rights reserved.
  * Copyright (c) 2017-2018 Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * Copyright (c) 2017      IBM Corporation. All rights reserved.
@@ -127,6 +127,7 @@ int mca_common_ompio_set_view (ompio_file_t *fh,
     mca_common_ompio_decode_datatype (fh,
                                       newfiletype,
                                       1,
+                                      fh->f_datarep,
                                       NULL,
                                       &max_data,
                                       &fh->f_decoded_iov,

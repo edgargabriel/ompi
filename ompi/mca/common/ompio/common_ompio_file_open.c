@@ -9,7 +9,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Copyright (c) 2004-2005 The Regents of the University of California.
  *                         All rights reserved.
- * Copyright (c) 2008-2018 University of Houston. All rights reserved.
+ * Copyright (c) 2008-2019 University of Houston. All rights reserved.
  * Copyright (c) 2015-2018 Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * Copyright (c) 2016      Cisco Systems, Inc.  All rights reserved.
@@ -41,6 +41,7 @@
 #include <math.h>
 #include "common_ompio.h"
 #include "ompi/mca/topo/topo.h"
+#include "ompi/datatype/ompi_datatype.h"
 
 static mca_common_ompio_generate_current_file_view_fn_t generate_current_file_view_fn;
 static mca_common_ompio_get_mca_parameter_value_fn_t get_mca_parameter_value_fn;
@@ -555,6 +556,7 @@ int mca_common_ompio_create_incomplete_file_handle (const char *filename,
 int mca_common_ompio_decode_datatype (struct ompio_file_t *fh,
                                       ompi_datatype_t *datatype,
                                       int count,
+                                      char *datarep,
                                       const void *buf,
                                       size_t *max_data,
                                       struct iovec **iov,
@@ -571,8 +573,13 @@ int mca_common_ompio_decode_datatype (struct ompio_file_t *fh,
     size_t temp_data;
 
 
-    opal_convertor_clone (fh->f_convertor, &convertor, 0);
-
+    if ( strcmp(datarep, "external32") ||  strcmp(datarep, "EXTERNAL32")) {
+        opal_convertor_clone (ompi_mpi_external32_convertor, &convertor, 0);
+    }
+    else {
+        opal_convertor_clone (fh->f_convertor, &convertor, 0);
+    }
+    
     if (OMPI_SUCCESS != opal_convertor_prepare_for_send (&convertor,
                                                          &(datatype->super),
                                                          count,

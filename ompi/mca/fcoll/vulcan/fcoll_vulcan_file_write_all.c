@@ -9,7 +9,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Copyright (c) 2004-2005 The Regents of the University of California.
  *                         All rights reserved.
- * Copyright (c) 2008-2018 University of Houston. All rights reserved.
+ * Copyright (c) 2008-2019 University of Houston. All rights reserved.
  * Copyright (c) 2015-2018 Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * $COPYRIGHT$
@@ -183,6 +183,7 @@ int mca_fcoll_vulcan_file_write_all (ompio_file_t *fh,
     ret =   mca_common_ompio_decode_datatype ((struct ompio_file_t *) fh,
                                               datatype,
                                               count,
+                                              "native",
                                               buf,
                                               &max_data,
                                               &decoded_iov,
