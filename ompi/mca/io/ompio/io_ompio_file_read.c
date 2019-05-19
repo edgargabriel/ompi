@@ -51,7 +51,7 @@
 ** ompio_file_t structure.
 */
 
-int mca_io_ompio_file_read (ompi_file_t *fh,
+int mca_io_ompio_file_read (ompi_file_t *fp,
 			    void *buf,
 			    int count,
 			    struct ompi_datatype_t *datatype,
@@ -59,31 +59,11 @@ int mca_io_ompio_file_read (ompi_file_t *fh,
 {
     int ret = OMPI_SUCCESS;
     mca_common_ompio_data_t *data;
-    ompio_file_t *fp;
 
-    data = (mca_common_ompio_data_t *) fh->f_io_selected_data;
-    fp = &data->ompio_fh;
-
-    OPAL_THREAD_LOCK(&fh->f_lock);
-    if ( strcmp(fp->f_datarep, "external32") ||  strcmp(fp->f_datarep, "EXTERNAL32")) {
-        MPI_Aint size, position=0;
-        char *tmpbuf;
-        ret = ompi_datatype_pack_external_size(fp->f_datarep, count,
-                                               datatype, &size);
-        tmpbuf = (char *) malloc (size );
-        if ( NULL == tmpbuf ) {
-            return OMPI_ERR_OUT_OF_RESOURCE;
-        }
-        ret = mca_common_ompio_file_read(fp,tmpbuf,size,MPI_BYTE,status);
-        ompi_datatype_unpack_external(fp->f_datarep, tmpbuf, size, &position,
-                                      buf,count, datatype);
-
-        free (tmpbuf);
-    }
-    else {
-        ret = mca_common_ompio_file_read(fp,buf,count,datatype,status);
-    }
-    OPAL_THREAD_UNLOCK(&fh->f_lock);
+    data = (mca_common_ompio_data_t *) fp->f_io_selected_data;
+    OPAL_THREAD_LOCK(&fp->f_lock);
+    ret = mca_common_ompio_file_read(&data->ompio_fh,buf,count,datatype,status);
+    OPAL_THREAD_UNLOCK(&fp->f_lock);
 
     return ret;
 }
@@ -97,30 +77,10 @@ int mca_io_ompio_file_read_at (ompi_file_t *fh,
 {
     int ret = OMPI_SUCCESS;
     mca_common_ompio_data_t *data;
-    ompio_file_t *fp;
 
     data = (mca_common_ompio_data_t *) fh->f_io_selected_data;
-    fp = &data->ompio_fh;
-
     OPAL_THREAD_LOCK(&fh->f_lock);
-    if ( strcmp(fp->f_datarep, "external32") ||  strcmp(fp->f_datarep, "EXTERNAL32")) {
-        MPI_Aint size, position=0;
-        char *tmpbuf;
-        ret = ompi_datatype_pack_external_size(fp->f_datarep, count,
-                                               datatype, &size);
-        tmpbuf = (char *) malloc (size );
-        if ( NULL == tmpbuf ) {
-            return OMPI_ERR_OUT_OF_RESOURCE;
-        }
-        ret = mca_common_ompio_file_read_at(fp,offset, tmpbuf,size,MPI_BYTE,status);
-        ompi_datatype_unpack_external(fp->f_datarep, tmpbuf, size, &position,
-                                      buf,count, datatype);
-
-        free (tmpbuf);
-    }
-    else {
-        ret = mca_common_ompio_file_read_at(fp, offset,buf,count,datatype,status);
-    }
+    ret = mca_common_ompio_file_read_at(&data->ompio_fh, offset,buf,count,datatype,status);
     OPAL_THREAD_UNLOCK(&fh->f_lock);
 
     return ret;
@@ -173,29 +133,15 @@ int mca_io_ompio_file_read_all (ompi_file_t *fh,
 {
     int ret = OMPI_SUCCESS;
     mca_common_ompio_data_t *data;
-    ompio_file_t *fp;
 
     data = (mca_common_ompio_data_t *) fh->f_io_selected_data;
-    fp = &data->ompio_fh;
 
     OPAL_THREAD_LOCK(&fh->f_lock);
-    if ( strcmp(fp->f_datarep, "external32") ||  strcmp(fp->f_datarep, "EXTERNAL32")) {
-        MPI_Aint size, position=0;
-        char *tmpbuf;
-        ret = ompi_datatype_pack_external_size(fp->f_datarep, count,
-                                               datatype, &size);
-        tmpbuf = (char *) malloc (size );
-        if ( NULL == tmpbuf ) {
-            return OMPI_ERR_OUT_OF_RESOURCE;
-        }
-        ret = mca_common_ompio_file_read_all(fp,tmpbuf,size,MPI_BYTE,status);
-        ompi_datatype_unpack_external(fp->f_datarep, tmpbuf, size, &position,
-                                      buf,count, datatype);
-        free (tmpbuf);
-    }
-    else {
-        ret = mca_common_ompio_file_read_all (fp, buf,count, datatype,status);
-    }
+    ret = mca_common_ompio_file_read_all (&data->ompio_fh,
+                                          buf,
+                                          count,
+                                          datatype,
+                                          status);
     OPAL_THREAD_UNLOCK(&fh->f_lock);
     if ( MPI_STATUS_IGNORE != status ) {
 	size_t size;
@@ -221,7 +167,11 @@ int mca_io_ompio_file_iread_all (ompi_file_t *fh,
     fp = &data->ompio_fh;
 
     OPAL_THREAD_LOCK(&fh->f_lock);
-    ret = mca_common_ompio_file_iread_all (fp, buf,count,datatype,request);
+    ret = mca_common_ompio_file_iread_all (&data->ompio_fh,
+                                           buf,
+                                           count,
+                                           datatype,
+                                           request);
     OPAL_THREAD_UNLOCK(&fh->f_lock);
 
     return ret;
@@ -237,30 +187,10 @@ int mca_io_ompio_file_read_at_all (ompi_file_t *fh,
 {
     int ret = OMPI_SUCCESS;
     mca_common_ompio_data_t *data;
-    ompio_file_t *fp;
 
     data = (mca_common_ompio_data_t *) fh->f_io_selected_data;
-    fp = &data->ompio_fh;
-
     OPAL_THREAD_LOCK(&fh->f_lock);
-    if ( strcmp(fp->f_datarep, "external32") ||  strcmp(fp->f_datarep, "EXTERNAL32")) {
-        MPI_Aint size, position=0;
-        char *tmpbuf;
-        ret = ompi_datatype_pack_external_size(fp->f_datarep, count,
-                                               datatype, &size);
-        tmpbuf = (char *) malloc (size );
-        if ( NULL == tmpbuf ) {
-            return OMPI_ERR_OUT_OF_RESOURCE;
-        }
-        ret = mca_common_ompio_file_read_at_all(fp,offset, tmpbuf,size,MPI_BYTE,status);
-        ompi_datatype_unpack_external(fp->f_datarep, tmpbuf, size, &position,
-                                      buf,count, datatype);
-
-        free (tmpbuf);
-    }
-    else {
-        ret = mca_common_ompio_file_read_at_all(fp,offset,buf,count,datatype,status);
-    }
+    ret = mca_common_ompio_file_read_at_all(&data->ompio_fh,offset,buf,count,datatype,status);
     OPAL_THREAD_UNLOCK(&fh->f_lock);
 
     return ret;
@@ -308,24 +238,7 @@ int mca_io_ompio_file_read_shared (ompi_file_t *fp,
 	return OMPI_ERROR;
     }
     OPAL_THREAD_LOCK(&fp->f_lock);
-    if ( strcmp(fh->f_datarep, "external32") ||  strcmp(fh->f_datarep, "EXTERNAL32")) {
-        MPI_Aint size, position=0;
-        char *tmpbuf;
-        ret = ompi_datatype_pack_external_size(fh->f_datarep, count,
-                                               datatype, &size);
-        tmpbuf = (char *) malloc (size );
-        if ( NULL == tmpbuf ) {
-            return OMPI_ERR_OUT_OF_RESOURCE;
-        }
-        ret = shared_fp_base_module->sharedfp_read(fh,tmpbuf,size,MPI_BYTE,status);
-        ompi_datatype_unpack_external(fh->f_datarep, tmpbuf, size, &position,
-                                      buf, count, datatype);
-
-        free (tmpbuf);
-    }
-    else {
-        ret = shared_fp_base_module->sharedfp_read(fh,buf,count,datatype,status);
-    }
+    ret = shared_fp_base_module->sharedfp_read(fh,buf,count,datatype,status);
     OPAL_THREAD_UNLOCK(&fp->f_lock);
 
     return ret;
@@ -358,7 +271,7 @@ int mca_io_ompio_file_iread_shared (ompi_file_t *fh,
     return ret;
 }
 
-int mca_io_ompio_file_read_ordered (ompi_file_t *fp,
+int mca_io_ompio_file_read_ordered (ompi_file_t *fh,
 				    void *buf,
 				    int count,
 				    struct ompi_datatype_t *datatype,
@@ -366,38 +279,21 @@ int mca_io_ompio_file_read_ordered (ompi_file_t *fp,
 {
     int ret = OMPI_SUCCESS;
     mca_common_ompio_data_t *data;
-    ompio_file_t *fh;
+    ompio_file_t *ompio_fh;
     mca_sharedfp_base_module_t * shared_fp_base_module;
 
-    data = (mca_common_ompio_data_t *) fp->f_io_selected_data;
-    fh = &data->ompio_fh;
+    data = (mca_common_ompio_data_t *) fh->f_io_selected_data;
+    ompio_fh = &data->ompio_fh;
 
     /*get the shared fp module associated with this file*/
-    shared_fp_base_module = (mca_sharedfp_base_module_t *)(fh->f_sharedfp);
+    shared_fp_base_module = (mca_sharedfp_base_module_t *)(ompio_fh->f_sharedfp);
     if ( NULL == shared_fp_base_module ){
         opal_output(0, "No shared file pointer component found for the given communicator. Can not execute\n");
 	return OMPI_ERROR;
     }
-    OPAL_THREAD_LOCK(&fp->f_lock);
-    if ( strcmp(fh->f_datarep, "external32") ||  strcmp(fh->f_datarep, "EXTERNAL32")) {
-        MPI_Aint size, position=0;
-        char *tmpbuf;
-        ret = ompi_datatype_pack_external_size(fh->f_datarep, count,
-                                               datatype, &size);
-        tmpbuf = (char *) malloc (size );
-        if ( NULL == tmpbuf ) {
-            return OMPI_ERR_OUT_OF_RESOURCE;
-        }
-        ret = shared_fp_base_module->sharedfp_read_ordered(fh,tmpbuf,size,MPI_BYTE,status);
-        ompi_datatype_unpack_external(fh->f_datarep, tmpbuf, size, &position,
-                                      buf, count, datatype);
-
-        free (tmpbuf);
-    }
-    else {
-        ret = shared_fp_base_module->sharedfp_read_ordered(fh,buf,count,datatype,status);
-    }
-    OPAL_THREAD_UNLOCK(&fp->f_lock);
+    OPAL_THREAD_LOCK(&fh->f_lock);
+    ret = shared_fp_base_module->sharedfp_read_ordered(ompio_fh,buf,count,datatype,status);
+    OPAL_THREAD_UNLOCK(&fh->f_lock);
     return ret;
 }
 
