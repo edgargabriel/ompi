@@ -9,7 +9,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Copyright (c) 2004-2005 The Regents of the University of California.
  *                         All rights reserved.
- * Copyright (c) 2013-2018 University of Houston. All rights reserved.
+ * Copyright (c) 2013-2021 University of Houston. All rights reserved.
  * Copyright (c) 2018      Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * $COPYRIGHT$
@@ -29,7 +29,7 @@
 #include "ompi/mca/sharedfp/base/base.h"
 
 int mca_sharedfp_lockedfile_read ( ompio_file_t *fh,
-                                   void *buf, int count, MPI_Datatype datatype, MPI_Status *status)
+                                   void *buf, MPI_Count count, MPI_Datatype datatype, MPI_Status *status)
 {
     int ret = OMPI_SUCCESS;
     OMPI_MPI_OFFSET_TYPE offset = 0;
@@ -76,7 +76,7 @@ int mca_sharedfp_lockedfile_read ( ompio_file_t *fh,
 
 int mca_sharedfp_lockedfile_read_ordered (ompio_file_t *fh,
                                            void *buf,
-                                           int count,
+                                           MPI_Count count,
                                            struct ompi_datatype_t *datatype,
                                            ompi_status_public_t *status)
 {

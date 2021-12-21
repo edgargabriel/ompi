@@ -9,7 +9,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Copyright (c) 2004-2005 The Regents of the University of California.
  *                         All rights reserved.
- * Copyright (c) 2013-2018 University of Houston. All rights reserved.
+ * Copyright (c) 2013-2021 University of Houston. All rights reserved.
  * Copyright (c) 2015-2018 Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * $COPYRIGHT$
@@ -30,7 +30,7 @@
 
 int mca_sharedfp_lockedfile_write (ompio_file_t *fh,
                                    const void *buf,
-                                   int count,
+                                   MPI_Count count,
                                    struct ompi_datatype_t *datatype,
                                    ompi_status_public_t *status)
 {
@@ -75,7 +75,7 @@ int mca_sharedfp_lockedfile_write (ompio_file_t *fh,
 
 int mca_sharedfp_lockedfile_write_ordered (ompio_file_t *fh,
                                            const void *buf,
-                                           int count,
+                                           MPI_Count count,
                                            struct ompi_datatype_t *datatype,
                                            ompi_status_public_t *status)
 {

@@ -9,7 +9,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Copyright (c) 2004-2005 The Regents of the University of California.
  *                         All rights reserved.
- * Copyright (c) 2008-2016 University of Houston. All rights reserved.
+ * Copyright (c) 2008-2021 University of Houston. All rights reserved.
  * Copyright (c) 2015      Cisco Systems, Inc.  All rights reserved.
  * Copyright (c) 2015-2018 Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
@@ -62,43 +62,43 @@ int mca_sharedfp_sm_file_open (struct ompi_communicator_t *comm,
                                        ompio_file_t *fh);
 int mca_sharedfp_sm_file_close (ompio_file_t *fh);
 int mca_sharedfp_sm_read (ompio_file_t *fh,
-                                  void *buf, int count, MPI_Datatype datatype, MPI_Status *status);
+                                  void *buf, MPI_Count count, MPI_Datatype datatype, MPI_Status *status);
 int mca_sharedfp_sm_read_ordered (ompio_file_t *fh,
-                                          void *buf, int count, struct ompi_datatype_t *datatype,
+                                          void *buf, MPI_Count count, struct ompi_datatype_t *datatype,
                                           ompi_status_public_t *status
                                           );
 int mca_sharedfp_sm_read_ordered_begin (ompio_file_t *fh,
                                                  void *buf,
-                                                 int count,
+                                                 MPI_Count count,
                                                  struct ompi_datatype_t *datatype);
 int mca_sharedfp_sm_read_ordered_end (ompio_file_t *fh,
                                                void *buf,
                                                ompi_status_public_t *status);
 int mca_sharedfp_sm_iread (ompio_file_t *fh,
                                     void *buf,
-                                    int count,
+                                    MPI_Count count,
                                     struct ompi_datatype_t *datatype,
                                     ompi_request_t **request);
 int mca_sharedfp_sm_write (ompio_file_t *fh,
                                    const void *buf,
-                                   int count,
+                                   MPI_Count count,
                                    struct ompi_datatype_t *datatype,
                                    ompi_status_public_t *status);
 int mca_sharedfp_sm_write_ordered (ompio_file_t *fh,
                                            const void *buf,
-                                           int count,
+                                           MPI_Count count,
                                            struct ompi_datatype_t *datatype,
                                            ompi_status_public_t *status);
 int mca_sharedfp_sm_write_ordered_begin (ompio_file_t *fh,
                                                  const void *buf,
-                                                 int count,
+                                                 MPI_Count count,
                                                  struct ompi_datatype_t *datatype);
 int mca_sharedfp_sm_write_ordered_end (ompio_file_t *fh,
                                                const void *buf,
                                                ompi_status_public_t *status);
 int mca_sharedfp_sm_iwrite (ompio_file_t *fh,
                                     const void *buf,
-                                    int count,
+                                    MPI_Count count,
                                     struct ompi_datatype_t *datatype,
                                     ompi_request_t **request);
 /*--------------------------------------------------------------*
@@ -128,7 +128,7 @@ typedef struct mca_sharedfp_sm_data sm_data_global;
 
 
 int mca_sharedfp_sm_request_position (ompio_file_t *fh,
-                                      int bytes_requested,
+                                      long long bytes_requested,
                                       OMPI_MPI_OFFSET_TYPE * offset);
 /*
  * ******************************************************************
