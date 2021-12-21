@@ -58,14 +58,14 @@ int mca_fcoll_vulcan_module_finalize (ompio_file_t *file);
 
 int mca_fcoll_vulcan_file_read_all (ompio_file_t *fh,
                                     void *buf,
-                                    int count,
+                                    MPI_Count count,
                                     struct ompi_datatype_t *datatype,
                                     ompi_status_public_t * status);
 
 
 int mca_fcoll_vulcan_file_write_all (ompio_file_t *fh,
                                      const void *buf,
-                                     int count,
+                                     MPI_Count count,
                                      struct ompi_datatype_t *datatype,
                                      ompi_status_public_t * status);
 

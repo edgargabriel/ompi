@@ -114,7 +114,7 @@ int mca_fcoll_dynamic_gen2_split_iov_array ( ompio_file_t *fh, mca_common_ompio_
 
 int mca_fcoll_dynamic_gen2_file_write_all (ompio_file_t *fh,
                                       const void *buf,
-                                      int count,
+                                      MPI_Count count,
                                       struct ompi_datatype_t *datatype,
                                       ompi_status_public_t *status)
 {

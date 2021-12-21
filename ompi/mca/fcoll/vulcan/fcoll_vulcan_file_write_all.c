@@ -118,7 +118,7 @@ static int mca_fcoll_vulcan_minmax ( ompio_file_t *fh, struct iovec *iov, int io
 
 int mca_fcoll_vulcan_file_write_all (ompio_file_t *fh,
                                       const void *buf,
-                                      int count,
+                                      MPI_Count count,
                                       struct ompi_datatype_t *datatype,
                                       ompi_status_public_t *status)
 {

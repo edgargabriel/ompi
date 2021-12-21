@@ -51,7 +51,7 @@ static int read_heap_sort (mca_io_ompio_local_io_array *io_array,
 int
 mca_fcoll_vulcan_file_read_all (ompio_file_t *fh,
                                  void *buf,
-                                 int count,
+                                 MPI_Count count,
                                  struct ompi_datatype_t *datatype,
                                  ompi_status_public_t *status)
 {
