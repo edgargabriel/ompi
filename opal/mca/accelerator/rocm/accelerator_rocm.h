@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023  Advanced Micro Devices, Inc. All rights reserved.
  *
  * $COPYRIGHT$
  *
@@ -14,8 +14,17 @@
 #include "opal_config.h"
 
 #include <stdio.h>
+
+/* Not interested in warnings generated in hip_runtime_api.h */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wstrict-prototypes"
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_version.h>
+/* Restore warnings to original state */
+#pragma GCC diagnostic pop
+
 
 #include "opal/mca/accelerator/accelerator.h"
 
