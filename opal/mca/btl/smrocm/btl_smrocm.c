@@ -492,7 +492,7 @@ static struct mca_btl_base_endpoint_t *create_sm_endpoint(int local_proc, struct
 
     /* Create a remote memory pool on the endpoint. The rgpusm component
      * does not take any resources. They are filled in internally. */
-    ep->rcache = mca_rcache_base_module_create("rgpusm", NULL, NULL);
+    ep->rcache = mca_rcache_base_module_create("rgpurocsm", NULL, NULL);
 
     return ep;
 }
