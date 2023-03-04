@@ -368,7 +368,7 @@ static int smrocm_btl_first_time_init(mca_btl_smrocm_t *smrocm_btl, int32_t my_s
      * side.  Note that the res argument is not really used, but
      * needed to satisfy function signature. */
     mca_rcache_base_resources_t rcache_res;
-    smrocm_btl->rcache = mca_rcache_base_module_create("gpusm", smrocm_btl, &rcache_res);
+    smrocm_btl->rcache = mca_rcache_base_module_create("gpurocsm", smrocm_btl, &rcache_res);
     if (NULL == smrocm_btl->rcache) {
         return OPAL_ERR_OUT_OF_RESOURCE;
     }
