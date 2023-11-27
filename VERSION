@@ -6,6 +6,7 @@
 # Copyright (c) 2016-2022 IBM Corporation.  All rights reserved.
 # Copyright (c) 2017      Los Alamos National Security, LLC.  All rights
 #                         reserved.
+# Copyright (c) 2023      Advanced Micro Devices, inc (AMD)..                         
 
 # This is the VERSION file for Open MPI, describing the precise
 # version of Open MPI in this distribution.  The various components of
