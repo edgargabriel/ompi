@@ -14,6 +14,7 @@
  * Copyright (c) 2018      Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * Copyright (c) 2022      IBM Corporation. All rights reserved
+ * Copyright (c) 2023      Advanced Micro Devices, Inc. All rights reserved.
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
@@ -65,7 +66,9 @@ static mca_fbtl_base_module_1_0_0_t posix =  {
     NULL,                           /* module specific progress */
     NULL,                           /* free module specific data items on the request */
 #endif
-    mca_fbtl_posix_check_atomicity  /* check whether atomicity is supported on this fs */
+    mca_fbtl_posix_check_atomicity, /* check whether atomicity is supported on this fs */
+    NULL,                                 /* register buffers */
+    NULL                                  /* unregister all buffers */
 };
 /*
  * *******************************************************************

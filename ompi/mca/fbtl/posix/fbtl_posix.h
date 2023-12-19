@@ -13,6 +13,8 @@
  * Copyright (c) 2018      Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * Copyright (c) 2022      IBM Corporation. All rights reserved
+ * Copyright (c) 2023      Advanced Micro Devices, Inc. All rights reserved
+ *
  * $COPYRIGHT$
  *
  * Additional copyrights may follow

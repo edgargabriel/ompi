@@ -28,7 +28,10 @@ static mca_fbtl_base_module_1_0_0_t ime =  {
     mca_fbtl_ime_ipwritev,        /* non-blocking write */
     mca_fbtl_ime_progress,        /* module specific progress */
     mca_fbtl_ime_request_free,     /* free module specific data items on the request */
-    mca_fbtl_base_check_atomicity  /* check whether atomicity is supported on this fs */};
+    mca_fbtl_base_check_atomicity,  /* check whether atomicity is supported on this fs */
+    NULL,                           /* register buffers */
+    NULL                            /* unregister all buffers */
+};
 /*
  * *******************************************************************
  * ************************* structure ends **************************
