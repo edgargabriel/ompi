@@ -36,8 +36,26 @@
 
 #define MAX_ATTEMPTS 10
 
+static ssize_t mca_fbtl_posix_aio_ipreadv (ompio_file_t *fh, ompi_request_t *request);
+
 ssize_t mca_fbtl_posix_ipreadv (ompio_file_t *fh,
-                               ompi_request_t *request)
+                                ompi_request_t *request)
+{
+    if (mca_fbtl_posix_enable_io_uring) {
+        int buf_id = mca_fbtl_posix_get_registration_id(fh, fh->f_io_array[0].memory_address,
+                                                        fh->f_io_array[0].length );
+        if (-1 == buf_id) {
+          goto exit;
+        }
+        return mca_fbtl_posix_iouring_post_fixed(fh, buf_id, request, FBTL_POSIX_IO_URING_READ_FIXED);
+    }
+
+exit:
+   return mca_fbtl_posix_aio_ipreadv(fh, request);
+}
+
+static ssize_t mca_fbtl_posix_aio_ipreadv (ompio_file_t *fh,
+                                           ompi_request_t *request)
 {
 #if defined (FBTL_POSIX_HAVE_AIO)
     mca_fbtl_posix_request_data_t *data;

@@ -11,6 +11,7 @@
 #                         All rights reserved.
 # Copyright (c) 2008-2017 University of Houston. All rights reserved.
 # Copyright (c) 2017      IBM Corporation.  All rights reserved.
+# Copyright (c) 2023      Advanced Micro Devices, Inc.  All rights reserved.
 # $COPYRIGHT$
 #
 # Additional copyrights may follow
@@ -35,7 +36,8 @@ mcacomponent_LTLIBRARIES = $(component_install)
 mca_fbtl_posix_la_SOURCES = $(sources)
 mca_fbtl_posix_la_LDFLAGS = -module -avoid-version
 mca_fbtl_posix_la_LIBADD = $(top_builddir)/ompi/lib@OMPI_LIBMPI_NAME@.la \
-    $(OMPI_TOP_BUILDDIR)/ompi/mca/common/ompio/libmca_common_ompio.la
+    $(OMPI_TOP_BUILDDIR)/ompi/mca/common/ompio/libmca_common_ompio.la \
+    $(fbtl_posix_LIBS)
 
 noinst_LTLIBRARIES = $(component_noinst)
 libmca_fbtl_posix_la_SOURCES = $(sources)
@@ -51,4 +53,5 @@ sources = \
         fbtl_posix_ipreadv.c \
         fbtl_posix_pwritev.c \
         fbtl_posix_ipwritev.c \
-	fbtl_posix_lock.c
+	fbtl_posix_lock.c     \
+	fbtl_posix_iouring.c

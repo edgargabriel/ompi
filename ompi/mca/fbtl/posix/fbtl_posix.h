@@ -13,7 +13,7 @@
  * Copyright (c) 2018      Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * Copyright (c) 2022      IBM Corporation. All rights reserved
- * Copyright (c) 2023      Advanced Micro Devices, Inc. All rights reserved
+ * Copyright (c) 2024      Advanced Micro Devices, Inc. All rights reserved
  *
  * $COPYRIGHT$
  *
@@ -31,12 +31,22 @@
 #include "ompi/mca/common/ompio/common_ompio.h"
 #include "ompi/mca/common/ompio/common_ompio_request.h"
 
+#if HAVE_AIO_H
+#include <aio.h>
+#endif
+#ifdef FBTL_POSIX_HAVE_IO_URING
+#include <linux/io_uring.h>
+#include <liburing.h>
+#endif
+
 extern int mca_fbtl_posix_priority;
 extern bool mca_fbtl_posix_read_datasieving;
 extern bool mca_fbtl_posix_write_datasieving;
 extern size_t mca_fbtl_posix_max_block_size;
 extern size_t mca_fbtl_posix_max_gap_size;
 extern size_t mca_fbtl_posix_max_tmpbuf_size;
+extern int mca_fbtl_posix_queue_size;
+extern bool mca_fbtl_posix_enable_io_uring;
 
 BEGIN_C_DECLS
 
@@ -54,25 +64,29 @@ extern int ompi_fbtl_posix_max_prd_active_reqs;
 OMPI_DECLSPEC extern mca_fbtl_base_component_2_0_0_t mca_fbtl_posix_component;
 /*
  * ******************************************************************
- * ********* functions which are implemented in this module *********
+ * ********* functions implemented in this module *******************
  * ******************************************************************
  */
 
-ssize_t mca_fbtl_posix_preadv (ompio_file_t *file );
-ssize_t mca_fbtl_posix_pwritev (ompio_file_t *file );
-ssize_t mca_fbtl_posix_ipreadv (ompio_file_t *file,
-                               ompi_request_t *request);
-ssize_t mca_fbtl_posix_ipwritev (ompio_file_t *file,
-                                ompi_request_t *request);
+ssize_t mca_fbtl_posix_preadv   (ompio_file_t *file);
+ssize_t mca_fbtl_posix_pwritev  (ompio_file_t *file);
+ssize_t mca_fbtl_posix_ipreadv  (ompio_file_t *file, ompi_request_t *request);
+ssize_t mca_fbtl_posix_ipwritev (ompio_file_t *file, ompi_request_t *request);
 
-bool mca_fbtl_posix_progress     ( mca_ompio_request_t *req);
-void mca_fbtl_posix_request_free ( mca_ompio_request_t *req);
-bool mca_fbtl_posix_check_atomicity ( ompio_file_t *file);
+bool mca_fbtl_posix_progress        (mca_ompio_request_t *req);
+void mca_fbtl_posix_request_free    (mca_ompio_request_t *req);
+bool mca_fbtl_posix_check_atomicity (ompio_file_t *file);
 
-int mca_fbtl_posix_lock ( struct flock *lock, ompio_file_t *fh, int op, 
-                          OMPI_MPI_OFFSET_TYPE iov_offset, off_t len, int flags,
-                          int *lock_counter);
-void  mca_fbtl_posix_unlock ( struct flock *lock, ompio_file_t *fh, int *lock_counter );
+int mca_fbtl_posix_lock    (struct flock *lock, ompio_file_t *fh, int op, 
+			    OMPI_MPI_OFFSET_TYPE iov_offset, off_t len, int flags,
+			    int *lock_counter);
+void mca_fbtl_posix_unlock (struct flock *lock, ompio_file_t *fh, int *lock_counter );
+
+int mca_fbtl_posix_get_registration_id     (ompio_file_t *fh, const void *buf, size_t size);
+int mca_fbtl_posix_register_buffers        (ompio_file_t *fh, struct iovec *iov, int nelem);
+void mca_fbtl_posix_unregister_all_buffers (ompio_file_t *fh);
+ssize_t mca_fbtl_posix_iouring_post_fixed  (ompio_file_t *fh, int buf_index, ompi_request_t *request,
+					    int type);
 
 /* Right now statically defined, will become a configure check */
 #define FBTL_POSIX_HAVE_AIO 1
@@ -95,15 +109,49 @@ struct mca_fbtl_posix_request_data_t {
           int           *aio_req_status;      /* array of statuses */
       } prd_aio;
 #endif
+#if defined (FBTL_POSIX_HAVE_IO_URING)
+      struct {
+          struct iovec    *iou_iov;        /* array of iovecs */
+          off_t           *iou_offset;     /* array of offsets */
+          struct io_uring *iou_ring;       /* pointer to ring buffer */
+          int             iou_req_status;  /* status of operation (0: ongoing, 1: complete, -1: error) */
+      } prd_iou;
+#endif
     };
-
 };
 typedef struct mca_fbtl_posix_request_data_t mca_fbtl_posix_request_data_t;
 
-
 /* define constants for AIO requests */
-#define FBTL_POSIX_AIO_READ   1
-#define FBTL_POSIX_AIO_WRITE  2
+#define FBTL_POSIX_AIO_READ             1
+#define FBTL_POSIX_AIO_WRITE            2
+#define FBTL_POSIX_IO_URING_READ        3
+#define FBTL_POSIX_IO_URING_WRITE       4
+#define FBTL_POSIX_IO_URING_READ_FIXED  5
+#define FBTL_POSIX_IO_URING_WRITE_FIXED 6
+
+#if defined (FBTL_POSIX_HAVE_IO_URING)
+/* Structure used to manage the currently registered memory regions
+** within the component. Note, that this independent of the file handle
+**/
+struct mca_fbtl_posix_io_uring_regmem {
+    struct io_uring ring;
+    struct iovec *iov;   /* Array of iovs of buffers that are registered */
+    int nelem;           /* number of iov elements used in the iov array */
+    int maxelem;         /* max. number of iov elements currently alloacated */
+};
+typedef struct mca_fbtl_posix_io_uring_regmem  mca_fbtl_posix_io_uring_regmem_t;
+
+extern mca_fbtl_posix_io_uring_regmem_t mca_fbtl_posix_io_uring_data;
+
+/* Structure used to identify the request and the entry that has
+** completed when retrieving an io_uring cqe
+*/
+struct fbtl_posix_io_uring_rident {
+    ompi_request_t *request;
+    int               index;
+};
+typedef struct fbtl_posix_io_uring_rident fbtl_posix_io_uring_rident_t; 
+#endif
 
 #define OMPIO_SET_ATOMICITY_LOCK(_fh, _lock, _lock_counter, _op) {     \
      int32_t _orig_flags = _fh->f_flags;                               \

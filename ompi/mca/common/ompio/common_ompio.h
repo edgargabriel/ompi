@@ -191,10 +191,6 @@ struct ompio_file_t {
     enum ompio_fs_type     f_fstype;
     ompi_request_t        *f_split_coll_req;
     bool                   f_split_coll_in_use;
-    /* Place for selected sharedfp module to hang it's data.
-       Note: Neither f_sharedfp nor f_sharedfp_component seemed appropriate for this.
-    */
-    void                  *f_sharedfp_data;
 
     /* File View parameters */
     struct ompio_fview_t   f_fview;
@@ -207,11 +203,14 @@ struct ompio_file_t {
     mca_common_ompio_io_array_t *f_io_array;
     int                    f_num_of_io_entries;
 
-    /* Hooks for modules to hang things */
+    /* Hooks for components to hang things */
     mca_base_component_t *f_fs_component;
     mca_base_component_t *f_fcoll_component;
     mca_base_component_t *f_fbtl_component;
     mca_base_component_t *f_sharedfp_component;
+
+    /* Hooks for modules to hang things */
+    void                  *f_sharedfp_data;
 
     /* structure of function pointers */
     mca_fs_base_module_t       *f_fs;

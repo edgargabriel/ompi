@@ -42,6 +42,10 @@ bool mca_fbtl_posix_write_datasieving = true;
 size_t mca_fbtl_posix_max_block_size  = 1048576;  // 1MB
 size_t mca_fbtl_posix_max_gap_size    = 4096;     // Size of a block in many linux fs
 size_t mca_fbtl_posix_max_tmpbuf_size = 67108864; // 64 MB
+
+int mca_fbtl_posix_queue_size         = 16;       // initial queue size for io_uring_queue_init()
+bool mca_fbtl_posix_enable_io_uring   = false;    // default changed to true if io_uring is available in
+                                                  // in the register_component
 /*
  * Private functions
  */
@@ -129,6 +133,22 @@ static int register_component(void)
                                            MCA_BASE_VAR_SCOPE_READONLY,
                                            &mca_fbtl_posix_write_datasieving );
 
-    
+#if defined (FBTL_POSIX_HAVE_IO_URING)
+    mca_fbtl_posix_queue_size = 16;
+    (void) mca_base_component_var_register(&mca_fbtl_posix_component.fbtlm_version,
+                                           "queue_size", "Queue size for io_uring_queue_init",
+                                           MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
+                                           OPAL_INFO_LVL_9,
+                                           MCA_BASE_VAR_SCOPE_READONLY,
+                                           &mca_fbtl_posix_queue_size);
+    mca_fbtl_posix_enable_io_uring = true;
+    (void) mca_base_component_var_register(&mca_fbtl_posix_component.fbtlm_version,
+                                           "enable_io_uring", "Parameter indicating whether to enable io_uring based implementation. "
+                                           "Default: true.",
+                                           MCA_BASE_VAR_TYPE_BOOL, NULL, 0, 0,
+                                           OPAL_INFO_LVL_9,
+                                           MCA_BASE_VAR_SCOPE_READONLY,
+                                           &mca_fbtl_posix_enable_io_uring);
+#endif
     return OMPI_SUCCESS;
 }
