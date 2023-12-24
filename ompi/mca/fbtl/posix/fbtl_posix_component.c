@@ -133,7 +133,7 @@ static int register_component(void)
                                            MCA_BASE_VAR_SCOPE_READONLY,
                                            &mca_fbtl_posix_write_datasieving );
 
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
     mca_fbtl_posix_queue_size = 16;
     (void) mca_base_component_var_register(&mca_fbtl_posix_component.fbtlm_version,
                                            "queue_size", "Queue size for io_uring_queue_init",

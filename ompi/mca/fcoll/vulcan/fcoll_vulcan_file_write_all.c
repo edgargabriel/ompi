@@ -15,6 +15,7 @@
  * Copyright (c) 2023      Jeffrey M. Squyres.  All rights reserved.
  * Copyright (c) 2024      Triad National Security, LLC. All rights
  *                         reserved.
+ * Copyright (c) 2023-2024 Advanced Micro Devices, Inc.  All rights reserved.
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
@@ -30,6 +31,7 @@
 #include "ompi/mca/fcoll/fcoll.h"
 #include "ompi/mca/fcoll/base/fcoll_base_coll_array.h"
 #include "ompi/mca/common/ompio/common_ompio.h"
+#include "ompi/mca/common/ompio/common_ompio_buffer.h"
 #include "ompi/mca/io/io.h"
 #include "ompi/mca/common/ompio/common_ompio_request.h"
 #include "math.h"
@@ -541,6 +543,7 @@ int mca_fcoll_vulcan_file_write_all (struct ompio_file_t *fh,
             }
         
             
+#ifdef ORIG
             aggr_data[i]->global_buf       = (char *) malloc (bytes_per_cycle);
             aggr_data[i]->prev_global_buf  = (char *) malloc (bytes_per_cycle);
             if (NULL == aggr_data[i]->global_buf || NULL == aggr_data[i]->prev_global_buf){
@@ -548,7 +551,10 @@ int mca_fcoll_vulcan_file_write_all (struct ompio_file_t *fh,
                 ret = OMPI_ERR_OUT_OF_RESOURCE;
                 goto exit;
             }
-        
+#endif
+	    aggr_data[i]->global_buf       = mca_common_ompio_alloc_buf (fh, bytes_per_cycle);
+	    aggr_data[i]->prev_global_buf  = mca_common_ompio_alloc_buf (fh, bytes_per_cycle);
+
             aggr_data[i]->recvtype = (ompi_datatype_t **) malloc (fh->f_procs_per_group  * 
                                                                   sizeof(ompi_datatype_t *));
             aggr_data[i]->prev_recvtype = (ompi_datatype_t **) malloc (fh->f_procs_per_group  * 
@@ -715,8 +721,12 @@ exit :
                 
                 free (aggr_data[i]->disp_index);
                 free (aggr_data[i]->max_disp_index);
+#ifdef ORIG
                 free (aggr_data[i]->global_buf);
                 free (aggr_data[i]->prev_global_buf);
+#endif
+		mca_common_ompio_release_buf(fh, aggr_data[i]->global_buf);
+		mca_common_ompio_release_buf(fh, aggr_data[i]->prev_global_buf);
                 for(l=0;l<aggr_data[i]->procs_per_group;l++){
                     free (aggr_data[i]->blocklen_per_process[l]);
                     free (aggr_data[i]->displs_per_process[l]);

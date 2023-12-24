@@ -314,7 +314,7 @@ ssize_t mca_fbtl_posix_pwritev_generic (ompio_file_t *fh, struct flock *lock, in
             mca_fbtl_posix_unlock ( lock, fh, lock_counter );
             return OMPI_ERROR;
         }
-#if defined (HAVE_PWRITEV) 
+#if HAVE_PWRITEV
 	ret_code = pwritev (fh->fd, iov, iov_count, iov_offset);
 #else
 	if (-1 == lseek (fh->fd, iov_offset, SEEK_SET)) {

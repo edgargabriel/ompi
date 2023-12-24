@@ -79,7 +79,7 @@ static mca_fbtl_base_module_1_0_0_t posix =  {
     NULL,                           /* free module specific data items on the request */
 #endif
     mca_fbtl_posix_check_atomicity, /* check whether atomicity is supported on this fs */
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
     mca_fbtl_posix_register_buffers,      /* register bufferes */
     mca_fbtl_posix_unregister_all_buffers /* unregister all buffers */
 #else
@@ -129,7 +129,7 @@ int mca_fbtl_posix_module_init (ompio_file_t *file) {
         ompi_fbtl_posix_max_prd_active_reqs = (int)val;
     }
 #endif
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
     mca_fbtl_posix_io_uring_regmem_t *reg = &mca_fbtl_posix_io_uring_data;;
     static bool io_uring_is_init = false;
 
@@ -298,7 +298,7 @@ static bool mca_fbtl_posix_aio_progress ( mca_ompio_request_t *req)
 static bool mca_fbtl_posix_iouring_progress (mca_ompio_request_t *req)
 {
     bool result = false;
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
     mca_fbtl_posix_request_data_t *data=(mca_fbtl_posix_request_data_t *)req->req_data;
     mca_ompio_request_t *tmpreq;
     fbtl_posix_io_uring_rident_t *tmprident;
@@ -389,7 +389,7 @@ bool mca_fbtl_posix_progress ( mca_ompio_request_t *req)
          return mca_fbtl_posix_aio_progress(req);
      }
 #endif
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
      if (FBTL_POSIX_IO_URING_READ_FIXED  == data->prd_req_type ||
          FBTL_POSIX_IO_URING_WRITE_FIXED == data->prd_req_type ||
          FBTL_POSIX_IO_URING_READ        == data->prd_req_type ||
@@ -417,7 +417,7 @@ void mca_fbtl_posix_request_free ( mca_ompio_request_t *req)
             }
         }
 #endif
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
         if (FBTL_POSIX_IO_URING_READ_FIXED  == data->prd_req_type ||
             FBTL_POSIX_IO_URING_WRITE_FIXED == data->prd_req_type ||
             FBTL_POSIX_IO_URING_READ        == data->prd_req_type ||
@@ -426,8 +426,8 @@ void mca_fbtl_posix_request_free ( mca_ompio_request_t *req)
                 free (data->prd_iou.iou_iov);
             }
         }
-    }
 #endif
+    }
     free (data);
     req->req_data = NULL;
 

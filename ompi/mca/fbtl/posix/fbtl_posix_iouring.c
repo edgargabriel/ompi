@@ -17,7 +17,7 @@
 #include "ompi/constants.h"
 #include "ompi/mca/fbtl/fbtl.h"
 
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
 mca_fbtl_posix_io_uring_regmem_t mca_fbtl_posix_io_uring_data;
 #endif
 
@@ -27,7 +27,7 @@ mca_fbtl_posix_io_uring_regmem_t mca_fbtl_posix_io_uring_data;
  */
 int mca_fbtl_posix_get_registration_id(ompio_file_t *fh, const void *buf, size_t size)
 {
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
     mca_fbtl_posix_io_uring_regmem_t *reg = &mca_fbtl_posix_io_uring_data;
     int i;
 
@@ -48,7 +48,7 @@ int mca_fbtl_posix_get_registration_id(ompio_file_t *fh, const void *buf, size_t
 
 int mca_fbtl_posix_register_buffers(ompio_file_t *fh, struct iovec *iov, int nelem)
 {
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
     mca_fbtl_posix_io_uring_regmem_t *reg = &mca_fbtl_posix_io_uring_data;
     int i;
 
@@ -120,7 +120,7 @@ void mca_fbtl_posix_unregister_all_buffers (ompio_file_t *fh)
 
 ssize_t mca_fbtl_posix_iouring_post_fixed (ompio_file_t *fh, int buf_index, ompi_request_t *request, int type)
 {
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
     struct io_uring_sqe *sqe;
     mca_ompio_request_t *req = (mca_ompio_request_t *) request;
     mca_fbtl_posix_request_data_t *data=NULL;
@@ -228,7 +228,6 @@ ssize_t mca_fbtl_posix_iouring_post_fixed (ompio_file_t *fh, int buf_index, ompi
     req->req_data        = data;
     req->req_progress_fn = mca_fbtl_posix_progress;
     req->req_free_fn     = mca_fbtl_posix_request_free;
-#endif
 
     return OMPI_SUCCESS;
 
@@ -242,6 +241,7 @@ ssize_t mca_fbtl_posix_iouring_post_fixed (ompio_file_t *fh, int buf_index, ompi
     if (NULL != data) {
         free (data);
     }
-    
+#endif
+
     return OMPI_ERROR;
 }

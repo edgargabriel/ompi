@@ -11,6 +11,7 @@
  *                          All rights reserved.
  *  Copyright (c) 2008-2019 University of Houston. All rights reserved.
  *  Copyright (c) 2022      Amazon.com, Inc. or its affiliates.  All Rights reserved.
+ *  Copyright (c) 2023      Advanced Micro Devices, Inc.  All Rights reserved.
  *  $COPYRIGHT$
  *
  *  Additional copyrights may follow
@@ -149,6 +150,15 @@ void *mca_common_ompio_alloc_buf ( ompio_file_t *fh, size_t bufsize )
     OPAL_THREAD_LOCK (&mca_common_ompio_buffer_mutex);
     tmp = mca_common_ompio_allocator->alc_alloc (mca_common_ompio_allocator,
                                                  bufsize, 0 );
+
+    if (NULL != fh->f_fbtl->fbtl_register_buffers) {
+        struct iovec iov;
+
+        iov.iov_base = tmp;
+        iov.iov_len  = bufsize;
+
+        fh->f_fbtl->fbtl_register_buffers(fh, &iov, 1);
+    }
     OPAL_THREAD_UNLOCK (&mca_common_ompio_buffer_mutex);
     return tmp;
 }

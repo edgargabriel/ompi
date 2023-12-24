@@ -304,7 +304,7 @@ ssize_t mca_fbtl_posix_preadv_generic (ompio_file_t *fh, struct flock *lock, int
             mca_fbtl_posix_unlock ( lock, fh, lock_counter);
             return OMPI_ERROR;
         }
-#if defined(HAVE_PREADV)
+#if HAVE_PREADV
         ret_code = preadv (fh->fd, iov, iov_count, iov_offset);
 #else
         if (-1 == lseek (fh->fd, iov_offset, SEEK_SET)) {

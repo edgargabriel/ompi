@@ -34,7 +34,7 @@
 #if HAVE_AIO_H
 #include <aio.h>
 #endif
-#ifdef FBTL_POSIX_HAVE_IO_URING
+#if FBTL_POSIX_HAVE_IO_URING
 #include <linux/io_uring.h>
 #include <liburing.h>
 #endif
@@ -109,7 +109,7 @@ struct mca_fbtl_posix_request_data_t {
           int           *aio_req_status;      /* array of statuses */
       } prd_aio;
 #endif
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
       struct {
           struct iovec    *iou_iov;        /* array of iovecs */
           off_t           *iou_offset;     /* array of offsets */
@@ -129,7 +129,7 @@ typedef struct mca_fbtl_posix_request_data_t mca_fbtl_posix_request_data_t;
 #define FBTL_POSIX_IO_URING_READ_FIXED  5
 #define FBTL_POSIX_IO_URING_WRITE_FIXED 6
 
-#if defined (FBTL_POSIX_HAVE_IO_URING)
+#if FBTL_POSIX_HAVE_IO_URING
 /* Structure used to manage the currently registered memory regions
 ** within the component. Note, that this independent of the file handle
 **/
