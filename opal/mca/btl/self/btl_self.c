@@ -207,7 +207,7 @@ static int mca_btl_self_send(struct mca_btl_base_module_t *btl,
                                                    .tag = tag,
                                                    .cbdata = reg->cbdata};
     int btl_ownership = (des->des_flags & MCA_BTL_DES_FLAGS_BTL_OWNERSHIP);
-
+    printf("[%d] mca_btl_self_send \n", getpid());
     /* upcall */
     reg->cbfunc(btl, &recv_desc);
 
@@ -229,6 +229,7 @@ static int mca_btl_self_sendi(struct mca_btl_base_module_t *btl,
 {
     mca_btl_base_descriptor_t *frag;
 
+    printf("[%d] mca_btl_self_sendi \n", getpid());
     if (!payload_size ||
         !(opal_convertor_need_buffers(convertor) ||
           opal_convertor_on_device(convertor))) {
@@ -268,6 +269,8 @@ static int mca_btl_self_put(mca_btl_base_module_t *btl, struct mca_btl_base_endp
                             int flags, int order, mca_btl_base_rdma_completion_fn_t cbfunc,
                             void *cbcontext, void *cbdata)
 {
+    printf("[%d] mca_btl_self_put: remote_address %p local_address %p size %lu \n", getpid(),
+           (void *) (intptr_t)remote_address, local_address, size);
     memcpy((void *) (intptr_t) remote_address, local_address, size);
 
     cbfunc(btl, endpoint, local_address, NULL, cbcontext, cbdata, OPAL_SUCCESS);
@@ -282,6 +285,8 @@ static int mca_btl_self_get(mca_btl_base_module_t *btl, struct mca_btl_base_endp
                             int flags, int order, mca_btl_base_rdma_completion_fn_t cbfunc,
                             void *cbcontext, void *cbdata)
 {
+    printf("[%d] mca_btl_self_get: remote_address %p local_address %p size %lu \n", getpid(),
+           (void *) (intptr_t)remote_address, local_address, size);
     memcpy(local_address, (void *) (intptr_t) remote_address, size);
 
     cbfunc(btl, endpoint, local_address, NULL, cbcontext, cbdata, OPAL_SUCCESS);

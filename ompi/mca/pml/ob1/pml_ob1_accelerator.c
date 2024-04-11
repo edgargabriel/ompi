@@ -369,6 +369,7 @@ int mca_pml_ob1_send_request_start_accelerator(mca_pml_ob1_send_request_t* sendr
                                                                            base,
                                                                            sendreq->req_send.req_bytes_packed,
                                                                            sendreq->req_rdma))) {
+	    printf("  [%d] pml_ob1_send_request_start_accelerator: calling pml_ob1_send_request_start_rdma\n", getpid());
             rc = mca_pml_ob1_send_request_start_rdma(sendreq, bml_btl,
                                                      sendreq->req_send.req_bytes_packed);
             if( OPAL_UNLIKELY(OMPI_SUCCESS != rc) ) {
@@ -376,15 +377,18 @@ int mca_pml_ob1_send_request_start_accelerator(mca_pml_ob1_send_request_t* sendr
             }
         } else {
             if (bml_btl->btl_flags & MCA_BTL_FLAGS_ACCELERATOR_PUT) {
+	        printf("  [%d] pml_ob1_send_request_start_accelerator: calling pml_ob1_send_request_start_rndv PUT path\n", getpid());
                 rc = mca_pml_ob1_send_request_start_rndv(sendreq, bml_btl, size,
                                                          MCA_PML_OB1_HDR_FLAGS_CONTIG);
             } else {
+	        printf("  [%d] pml_ob1_send_request_start_accelerator: calling pml_ob1_send_request_start_rndv GET path\n", getpid());
                 rc = mca_pml_ob1_send_request_start_rndv(sendreq, bml_btl, 0, 0);
             }
         }
     } else {
         /* Do not send anything with first rendezvous message as copying GPU
          * memory into RNDV message is expensive. */
+        printf("  [%d] pml_ob1_send_request_start_accelerator: pml_ob1_send_request_calling start_rndv 3\n", getpid());
         rc = mca_pml_ob1_send_request_start_rndv(sendreq, bml_btl, 0, 0);
     }
     return rc;

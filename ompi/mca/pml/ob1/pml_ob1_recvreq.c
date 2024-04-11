@@ -252,6 +252,7 @@ int mca_pml_ob1_recv_request_ack_send_btl(
     mca_pml_ob1_ack_hdr_t* ack;
     int rc;
 
+    printf("[%d] mca_pml_ob1_recv_request_ack_send_btl\n", getpid());
     /* allocate descriptor */
     mca_bml_base_alloc(bml_btl, &des, MCA_BTL_NO_ORDER,
                        sizeof(mca_pml_ob1_ack_hdr_t),
@@ -293,6 +294,7 @@ static int mca_pml_ob1_recv_request_ack(
     ompi_proc_t* proc = (ompi_proc_t*)recvreq->req_recv.req_base.req_proc;
     mca_bml_base_endpoint_t* bml_endpoint = NULL;
 
+    printf("[%d] mca_pml_ob1_recv_request_ack\n", getpid());
     bml_endpoint = mca_bml_base_get_endpoint (proc);
 
     /* by default copy everything */
@@ -410,6 +412,7 @@ static void mca_pml_ob1_rget_completion (mca_btl_base_module_t* btl, struct mca_
     mca_pml_ob1_rdma_frag_t *frag = (mca_pml_ob1_rdma_frag_t *) cbdata;
     mca_pml_ob1_recv_request_t *recvreq = (mca_pml_ob1_recv_request_t *) frag->rdma_req;
 
+    printf("[%d] pml_ob1_recv_rget_completion\n", getpid());
     /* check completion status */
     if (OPAL_UNLIKELY(OMPI_SUCCESS != status)) {
         status = mca_pml_ob1_recv_request_get_frag_failed (frag, status);
@@ -458,6 +461,7 @@ static int mca_pml_ob1_recv_request_put_frag (mca_pml_ob1_rdma_frag_t *frag)
     size_t reg_size;
     int rc;
 
+    printf("[%d] pml_ob1_recv_request_put_frag\n", getpid());
     reg_size = bml_btl->btl->btl_registration_handle_size;
 
     if (frag->local_handle) {
@@ -513,6 +517,7 @@ int mca_pml_ob1_recv_request_get_frag (mca_pml_ob1_rdma_frag_t *frag)
     mca_bml_base_btl_t *bml_btl = frag->rdma_bml;
     int rc;
 
+    printf("[%d] pml_ob1_recv_request_get_frag\n", getpid());
     /* prepare descriptor */
     if (bml_btl->btl->btl_register_mem && !frag->local_handle && !recvreq->local_handle) {
         mca_bml_base_register_mem (bml_btl, frag->local_address, frag->rdma_length, MCA_BTL_REG_FLAG_LOCAL_WRITE |
@@ -562,6 +567,7 @@ void mca_pml_ob1_recv_request_progress_frag( mca_pml_ob1_recv_request_t* recvreq
     size_t bytes_delivered __opal_attribute_unused__; /* is being set to zero in MCA_PML_OB1_RECV_REQUEST_UNPACK */
     mca_pml_ob1_hdr_t* hdr = (mca_pml_ob1_hdr_t*)segments->seg_addr.pval;
 
+    printf("[%d] pml_ob1_recv_request_progress_frag\n", getpid());
     bytes_received = mca_pml_ob1_compute_segment_length_base (segments, num_segments,
                                                               sizeof(mca_pml_ob1_frag_hdr_t));
     data_offset     = hdr->hdr_frag.hdr_frag_offset;
@@ -698,6 +704,7 @@ void mca_pml_ob1_recv_request_progress_rget( mca_pml_ob1_recv_request_t* recvreq
     mca_bml_base_btl_t *rdma_bml;
     int rc;
 
+    printf("[%d] pml_ob1_recv_request_progress_rget\n", getpid());
     prev_sent = offset = 0;
     recvreq->req_recv.req_bytes_packed = hdr->hdr_rndv.hdr_msg_length;
     recvreq->req_send_offset = 0;
@@ -846,6 +853,7 @@ void mca_pml_ob1_recv_request_progress_rndv( mca_pml_ob1_recv_request_t* recvreq
     size_t data_offset = 0;
     mca_pml_ob1_hdr_t* hdr = (mca_pml_ob1_hdr_t*)segments->seg_addr.pval;
 
+    printf("[%d] pml_ob1_recv_request_progress_rndv\n", getpid());
     bytes_received = mca_pml_ob1_compute_segment_length_base (segments, num_segments,
                                                               sizeof(mca_pml_ob1_rendezvous_hdr_t));
 

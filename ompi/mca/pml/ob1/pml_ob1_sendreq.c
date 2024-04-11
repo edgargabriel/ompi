@@ -834,6 +834,7 @@ int mca_pml_ob1_send_request_start_rdma( mca_pml_ob1_send_request_t* sendreq,
     if (!(bml_btl->btl_flags & (MCA_BTL_FLAGS_GET | MCA_BTL_FLAGS_ACCELERATOR_GET))) {
         sendreq->rdma_frag = NULL;
         /* This BTL does not support get. Use rendezvous to start the RDMA operation using put instead. */
+        printf("    [%d] start_rdma: about to call start_rndv\n", getpid());
         return mca_pml_ob1_send_request_start_rndv (sendreq, bml_btl, 0, MCA_PML_OB1_HDR_FLAGS_CONTIG |
                                                     MCA_PML_OB1_HDR_FLAGS_PIN);
     }
@@ -1005,6 +1006,7 @@ int mca_pml_ob1_send_request_start_rndv( mca_pml_ob1_send_request_t* sendreq,
     rc = mca_bml_base_send(bml_btl, des, hdr->hdr_common.hdr_type);
     if( OPAL_LIKELY( rc >= 0 ) ) {
         if( OPAL_LIKELY( 1 == rc ) ) {
+            printf("  [%d] start_rndv: calling rndv_completion_request\n", getpid());
             mca_pml_ob1_rndv_completion_request( bml_btl, sendreq, size );
         }
         return OMPI_SUCCESS;

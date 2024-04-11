@@ -265,6 +265,7 @@ send_request_pml_complete(mca_pml_ob1_send_request_t *sendreq)
         }
 
         /* return mpool resources */
+        //printf("          [%d] send_request_pml_complete: freeing rdma resources\n", getpid());
         mca_pml_ob1_free_rdma_resources(sendreq);
 
         if (sendreq->req_send.req_send_mode == MCA_PML_BASE_SEND_BUFFERED &&
@@ -306,6 +307,7 @@ send_request_pml_complete_check(mca_pml_ob1_send_request_t *sendreq)
     if(sendreq->req_state == 0 &&
             sendreq->req_bytes_delivered >= sendreq->req_send.req_bytes_packed
             && lock_send_request(sendreq)) {
+        printf("          [%d] send_request_pml_complete_check: marking sendreq as complete\n", getpid());
         send_request_pml_complete(sendreq);
         return true;
     }
@@ -410,12 +412,15 @@ mca_pml_ob1_send_request_start_btl( mca_pml_ob1_send_request_t* sendreq,
             rc = mca_pml_ob1_send_request_start_copy(sendreq, bml_btl, size);
             break;
         case MCA_PML_BASE_SEND_COMPLETE:
+            printf("[%d] pml_ob1_start_sendreq: calling start_prepare size %lu\n", getpid(), size);
             rc = mca_pml_ob1_send_request_start_prepare(sendreq, bml_btl, size);
             break;
         default:
             if (size != 0 && bml_btl->btl_flags & MCA_BTL_FLAGS_SEND_INPLACE) {
+                printf("[%d] pml_ob1_start_sendreq: calling start_prepare 2 size %lu\n", getpid(), size);
                 rc = mca_pml_ob1_send_request_start_prepare(sendreq, bml_btl, size);
             } else {
+                printf("[%d] pml_ob1_start_sendreq: calling start_copy size %lu\n", getpid(), size);
                 rc = mca_pml_ob1_send_request_start_copy(sendreq, bml_btl, size);
             }
             break;
@@ -438,19 +443,23 @@ mca_pml_ob1_send_request_start_btl( mca_pml_ob1_send_request_t* sendreq,
                                                                               base,
                                                                               sendreq->req_send.req_bytes_packed,
                                                                               sendreq->req_rdma))) {
+                printf("[%d] pml_ob1_start_sendreq: calling start_rdma size %lu\n", getpid(), size);
                 rc = mca_pml_ob1_send_request_start_rdma(sendreq, bml_btl,
                                                          sendreq->req_send.req_bytes_packed);
                 if( OPAL_UNLIKELY(OMPI_SUCCESS != rc) ) {
                     mca_pml_ob1_free_rdma_resources(sendreq);
                 }
             } else {
+                printf("[%d] pml_ob1_start_sendreq: calling start_rndv 1 size %lu\n", getpid(), size);
                 rc = mca_pml_ob1_send_request_start_rndv(sendreq, bml_btl, size,
                                                          MCA_PML_OB1_HDR_FLAGS_CONTIG);
             }
         } else {
             if (sendreq->req_send.req_base.req_convertor.flags & CONVERTOR_ACCELERATOR) {
+                printf("[%d] pml_ob1_start_sendreq: calling start_accelerator size %lu\n", getpid(), size);
                 return mca_pml_ob1_send_request_start_accelerator(sendreq, bml_btl, size);
             }
+            printf("[%d] pml_ob1_start_sendreq: calling start_rndv 2 size %lu\n", getpid(), size);
             rc = mca_pml_ob1_send_request_start_rndv(sendreq, bml_btl, size, 0);
         }
     }
