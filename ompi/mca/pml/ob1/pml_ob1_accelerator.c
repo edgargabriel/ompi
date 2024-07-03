@@ -75,6 +75,7 @@ static volatile int accelerator_event_dtoh_num_used, accelerator_event_htod_num_
 static int accelerator_event_max = 400;
 static int accelerator_event_htod_most = 0;
 
+static bool accelerator_is_init = false;
 int mca_pml_ob1_record_htod_event(char *msg, struct mca_btl_base_descriptor_t *frag)
 {
     int result;
@@ -82,6 +83,12 @@ int mca_pml_ob1_record_htod_event(char *msg, struct mca_btl_base_descriptor_t *f
     if (0 == strcmp(opal_accelerator_base_selected_component.base_version.mca_component_name, "null")) {
         return 0;
     }
+
+    if (!accelerator_is_init) {
+        printf("[%d] calling accelerator_init from ob1_record_htod_event\n", getpid());
+        mca_pml_ob1_accelerator_init();
+    }
+    printf("[%d] pml_ob1_record_htod_event \n", getpid());
 
     /* First make sure there is room to store the event.  If not, then
      * return an error.  The error message will tell the user to try and
@@ -124,10 +131,20 @@ int mca_pml_ob1_record_htod_event(char *msg, struct mca_btl_base_descriptor_t *f
 
 opal_accelerator_stream_t *mca_pml_ob1_get_dtoh_stream(void)
 {
+    if (!accelerator_is_init) {
+        printf("[%d] calling accelerator_init from ob1_get_dtoh_stream\n", getpid());
+        mca_pml_ob1_accelerator_init();
+    }
+
     return dtoh_stream;
 }
 opal_accelerator_stream_t *mca_pml_ob1_get_htod_stream(void)
 {
+    if (!accelerator_is_init) {
+        printf("[%d] calling accelerator_init from ob1_get_htod_stream\n", getpid());
+        mca_pml_ob1_accelerator_init();
+    }
+
     return htod_stream;
 }
 
@@ -140,6 +157,11 @@ int mca_pml_ob1_progress_one_htod_event(struct mca_btl_base_descriptor_t **frag)
 
     if (0 == strcmp(opal_accelerator_base_selected_component.base_version.mca_component_name, "null")) {
         return 0;
+    }
+
+    if (!accelerator_is_init) {
+        printf("[%d] calling accelerator_init from ob1_progress_one_htod_event\n", getpid());
+        mca_pml_ob1_accelerator_init();
     }
 
     OPAL_THREAD_LOCK(&pml_ob1_accelerator_htod_lock);
@@ -273,6 +295,10 @@ int mca_pml_ob1_accelerator_init(void)
         rc = OPAL_ERROR;
         goto cleanup_and_error;
     }
+
+    printf("[%d] accelerator_init completed\n", getpid());
+    accelerator_is_init = true;
+    mca_pml_ob1.accelerator_enabled = true;
 
 cleanup_and_error:
     if (OPAL_SUCCESS != rc) {

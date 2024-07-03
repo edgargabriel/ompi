@@ -198,6 +198,7 @@ static int mca_pml_ob1_get_posted_recvq_size (const struct mca_base_pvar_t *pvar
 static int mca_pml_ob1_component_register(void)
 {
     mca_pml_ob1_param_register_int("verbose", 0, &mca_pml_ob1_verbose);
+    mca_pml_ob1_param_register_int("accelerator_delayed_init", 1, &mca_pml_ob1.accelerator_delayed_init);
 
     mca_pml_ob1_param_register_int("free_list_num", 4, &mca_pml_ob1.free_list_num);
     mca_pml_ob1_param_register_int("free_list_max", -1, &mca_pml_ob1.free_list_max);

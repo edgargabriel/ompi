@@ -198,7 +198,13 @@ int mca_pml_ob1_enable(bool enable)
                           mca_pml_ob1.free_list_inc,
                           NULL, 0, NULL, NULL, NULL);
 
-    mca_pml_ob1.accelerator_enabled = (0 == mca_pml_ob1_accelerator_init()) ? true : false;
+    mca_pml_ob1.accelerator_enabled = false;
+    if (0 == mca_pml_ob1.accelerator_delayed_init) {
+        mca_pml_ob1.accelerator_enabled = (0 == mca_pml_ob1_accelerator_init()) ? true : false;
+        printf("[%d]  .accelerator_enabled is %d\n", getpid(),  mca_pml_ob1.accelerator_enabled);
+    } else {
+        printf("[%d] not initialization ob1_accelerator code\n", getpid());
+    }
 
     mca_pml_ob1.enabled = true;
 

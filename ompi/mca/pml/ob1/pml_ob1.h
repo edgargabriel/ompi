@@ -88,6 +88,7 @@ struct mca_pml_ob1_t {
     unsigned int unexpected_limit;
     /* Accelerator support initialized */
     bool accelerator_enabled;
+    bool accelerator_delayed_init;
 };
 typedef struct mca_pml_ob1_t mca_pml_ob1_t;
 
