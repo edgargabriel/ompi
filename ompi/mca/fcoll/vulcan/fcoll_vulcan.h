@@ -70,7 +70,6 @@ int mca_fcoll_vulcan_file_read_all (struct ompio_file_t *fh,
                                     struct ompi_datatype_t *datatype,
                                     ompi_status_public_t * status);
 
-
 END_C_DECLS
 
 #endif /* MCA_FCOLL_VULCAN_EXPORT_H */
