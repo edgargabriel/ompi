@@ -18,6 +18,7 @@
  * Copyright (c) 2024      Triad National Security, LLC. All rights
  *                         reserved.
  * Copyright (c) 2026      Stony Brook University.  All rights reserved.
+ * Copyright (c) 2026      Advanced Micro Devices, Inc. All rights reserved.
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
@@ -192,7 +193,20 @@ int mca_fcoll_dynamic_gen2_file_write_all (struct ompio_file_t *fh,
     ** consequently.Initially, we will have only 1 group.
     */
     if ( fh->f_stripe_count > 1 ) {
-        dynamic_gen2_num_io_procs =  fh->f_stripe_count;
+        /* Use stripe count as the default aggregator count.  An explicit
+         * io_ompio_num_aggregators setting (any value > 0; -1 is the
+         * "auto" default) overrides the stripe-based selection. */
+        int mca_num_aggr = fh->f_get_mca_parameter_value("num_aggregators",
+                                                          strlen("num_aggregators"));
+        if ( OMPI_ERR_MAX == mca_num_aggr ) {
+            ret = OMPI_ERROR;
+            goto exit;
+        }
+        if ( mca_num_aggr > 0 ) {
+            dynamic_gen2_num_io_procs = mca_num_aggr;
+        } else {
+            dynamic_gen2_num_io_procs = fh->f_stripe_count;
+        }
     }
     else {
         dynamic_gen2_num_io_procs = fh->f_get_mca_parameter_value ( "num_aggregators", strlen ("num_aggregators"));
