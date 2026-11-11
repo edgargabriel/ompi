@@ -13,6 +13,7 @@
 # Copyright (c) 2010-2017 Cisco Systems, Inc.  All rights reserved
 # Copyright (c) 2008-2012 University of Houston. All rights reserved.
 # Copyright (c) 2022      Amazon.com, Inc. or its affiliates.  All Rights reserved.
+# Copyright (c) 2026      Advanced Micro Devices, Inc. All rights reserved.
 # $COPYRIGHT$
 #
 # Additional copyrights may follow
@@ -35,7 +36,19 @@ AC_DEFUN([MCA_ompi_fs_lustre_CONFIG],[
                      [fs_lustre_happy="no"])
 
     AS_IF([test "$fs_lustre_happy" = "yes"],
-          [$1],
+          [opal_check_save_CPPFLAGS=$CPPFLAGS
+           opal_check_save_LDFLAGS=$LDFLAGS
+           opal_check_save_LIBS=$LIBS
+           CPPFLAGS="$CPPFLAGS $fs_lustre_CPPFLAGS"
+           LDFLAGS="$LDFLAGS $fs_lustre_LDFLAGS"
+           LIBS="$LIBS $fs_lustre_LIBS"
+           AC_CHECK_FUNC([llapi_layout_get_by_fd],
+                         [AC_DEFINE([HAVE_LLAPI_LAYOUT_GET_BY_FD], [1],
+                                    [Define to 1 if llapi_layout_get_by_fd is available])])
+           CPPFLAGS=$opal_check_save_CPPFLAGS
+           LDFLAGS=$opal_check_save_LDFLAGS
+           LIBS=$opal_check_save_LIBS
+           $1],
           [$2])
 
     # substitute in the things needed to build lustre

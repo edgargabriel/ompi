@@ -13,7 +13,7 @@
  * Copyright (c) 2015-2020 Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * Copyright (c) 2016-2017 IBM Corporation. All rights reserved.
- * Copyright (c) 2024      Advanced Micro Devices, Inc. All rights reserverd.
+ * Copyright (c) 2024-2026 Advanced Micro Devices, Inc. All rights reserved.
  * Copyright (c) 2026      Jeffrey M. Squyres.  All rights reserved.
  * $COPYRIGHT$
  *
@@ -518,9 +518,66 @@ mca_fs_lustre_file_open (struct ompi_communicator_t *comm,
         free(lump);
         return OMPI_ERROR;
     }
-    fh->f_stripe_size   = lump->lmm_stripe_size;
-    fh->f_stripe_count  = lump->lmm_stripe_count;
-    fh->f_fs_block_size = lump->lmm_stripe_size;
+
+    if (LOV_USER_MAGIC_V1 == lump->lmm_magic ||
+        LOV_USER_MAGIC_V3 == lump->lmm_magic) {
+        /*
+         * Plain layout: stripe fields are valid.  LOV_ALL_STRIPES (0xffff)
+         * means "all OSTs" and is not a usable aggregator count; treat it as
+         * 1 so io_ompio_num_aggregators governs instead.
+         */
+        fh->f_stripe_size   = lump->lmm_stripe_size;
+        fh->f_fs_block_size = lump->lmm_stripe_size;
+        if (LOV_ALL_STRIPES == (uint16_t) lump->lmm_stripe_count) {
+            fh->f_stripe_count = 1;
+        } else {
+            fh->f_stripe_count = lump->lmm_stripe_count;
+        }
+    } else {
+        /*
+         * Composite (Progressive File Layout) or unknown magic.  The bytes
+         * at the lmm_stripe_size / lmm_stripe_count offsets are composite
+         * header fields, not stripe parameters, so they must not be used
+         * directly.  Try to read the first component's stripe info via the
+         * llapi_layout API when available; otherwise fall back to
+         * stripe_count=1 so io_ompio_num_aggregators decides.
+         */
+        fh->f_stripe_size  = 0;
+        fh->f_stripe_count = 1;
+#if HAVE_LLAPI_LAYOUT_GET_BY_FD
+        {
+            bool got_layout = false;
+            struct llapi_layout *layout = llapi_layout_get_by_fd(fh->fd, 0);
+            if (NULL != layout) {
+                uint64_t stripe_size = 0, stripe_count = 0;
+                if (0 == llapi_layout_comp_use(layout,
+                                               LLAPI_LAYOUT_COMP_USE_FIRST) &&
+                    0 == llapi_layout_stripe_size_get(layout, &stripe_size) &&
+                    0 == llapi_layout_stripe_count_get(layout, &stripe_count) &&
+                    stripe_size > 0 &&
+                    stripe_count != LLAPI_LAYOUT_DEFAULT &&
+                    stripe_count != LLAPI_LAYOUT_WIDE) {
+                    fh->f_stripe_size   = (long) stripe_size;
+                    fh->f_fs_block_size = (long) stripe_size;
+                    fh->f_stripe_count  = (int) stripe_count;
+                    got_layout = true;
+                }
+                llapi_layout_free(layout);
+            }
+            if (!got_layout) {
+                opal_output(1, "fs/lustre: lmm_magic 0x%x is not a plain "
+                            "layout; could not read first-component stripe "
+                            "info, defaulting stripe_count to 1\n",
+                            lump->lmm_magic);
+            }
+        }
+#else
+        opal_output(1, "fs/lustre: lmm_magic 0x%x is not a plain layout; "
+                    "defaulting stripe_count to 1 (build without "
+                    "llapi_layout_get_by_fd)\n", lump->lmm_magic);
+#endif /* HAVE_LLAPI_LAYOUT_GET_BY_FD */
+    }
+
     free(lump);
 
     if (FS_LUSTRE_LOCK_AUTO == mca_fs_lustre_lock_algorithm ||
