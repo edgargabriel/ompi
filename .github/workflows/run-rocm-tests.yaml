@@ -1,0 +1,48 @@
+name: Run-ROCM
+
+on: [pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  compile-rocm:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v6
+      with:
+            submodules: recursive
+    - name: Build UCX
+      run: |
+        wget https://github.com/openucx/ucx/archive/refs/tags/v1.22.0.tar.gz
+        tar -xzf v1.22.0.tar.gz
+        cd ucx-1.22.0/
+        ./autogen.sh
+        mkdir build && cd build
+        ../configure --prefix=${GITHUB_WORKSPACE}/install --with-rocm=/opt/rocm --enable-mt
+        make -j
+        make install
+    - name: Build Open MPI
+      run: |
+        export AUTOMAKE_JOBS=$(nproc)
+        ./autogen.pl
+        ./configure --prefix=${GITHUB_WORKSPACE}/install --with-ucx=${GITHUB_WORKSPACE}/install --with-rocm=/opt/rocm --disable-mpi-fortran --disable-silent-rules --with-hwloc=internal --with-prrte=internal --with-pmix=internal --with-libevent=internal
+        LD_LIBRARY_PATH=/opt/rocm/lib make -j
+        make install
+    - name: Build hip-mpi-testsuite
+      run: |
+        git clone https://github.com/ROCm/hip-mpi-testsuite
+        cd hip-mpi-testsuite
+        export PATH=${GITHUB_WORKSPACE}/install/bin:$PATH
+        export LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib:/opt/rocm/lib:$LD_LIBRARY_PATH
+        ./configure CXX=mpiCC --with-rocm=/opt/rocm
+        make -j$(nproc)
+        pwd
+    - name: Run hip-mpi-testsuite no UCX
+      run: |
+        cd hip-mpi-testsuite/scripts/
+        pwd
+        export PATH=${GITHUB_WORKSPACE}/install/bin:$PATH
+        export LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib:/opt/rocm/lib:$LD_LIBRARY_PATH
+        ./run_all_no_ucx.sh
+
