@@ -32,9 +32,9 @@ jobs:
         pwd
     - name: Run hip-mpi-testsuite no UCX
       run: |
-        cd hip-mpi-testsuite
+        cd hip-mpi-testsuite/scripts/
         pwd
         export PATH=${GITHUB_WORKSPACE}/install/bin:$PATH
         export LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib:$LD_LIBRARY_PATH
-        ./scripts/run_all_no_ucx.sh
+        ./run_all_no_ucx.sh
 
