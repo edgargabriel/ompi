@@ -9,7 +9,6 @@ jobs:
   compile-rocm:
     runs-on: self-hosted
     steps:
-    - name: Install dependencies
     - uses: actions/checkout@v6
       with:
             submodules: recursive
