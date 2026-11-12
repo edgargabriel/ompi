@@ -26,7 +26,7 @@ jobs:
         export LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib:$LD_LIBRARY_PATH
         ./configure CXX=mpiCC --with-rocm=/opt/rocm
         make -j$(nproc)
-	pwd
+        pwd
     - name: Build hip-mpi-testsuite no UCX
       run: |
         cd hip-mpi-testsuite
