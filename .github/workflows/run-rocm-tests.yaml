@@ -1,4 +1,4 @@
-name: ROCM
+name: Run-ROCM
 
 on: [pull_request]
 
