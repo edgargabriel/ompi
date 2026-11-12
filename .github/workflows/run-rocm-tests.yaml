@@ -16,5 +16,21 @@ jobs:
       run: |
         export AUTOMAKE_JOBS=$(nproc)
         ./autogen.pl
-        ./configure --prefix=${PWD}/install --with-rocm=/opt/rocm --disable-mpi-fortran --disable-silent-rules
+        ./configure --prefix=${GITHUB_WORKSPACE}/install --with-rocm=/opt/rocm --disable-mpi-fortran --disable-silent-rules --with-hwloc=internal --with-prrte=internal --with-pmix=internal --with-libevent=internal
         LD_LIBRARY_PATH=/opt/rocm/lib make -j
+    - name: Build hip-mpi-testsuite
+      run: |
+        git clone https://github.com/ROCm/hip-mpi-testsuite
+        cd hip-mpi-testsuite
+        export PATH=${GITHUB_WORKSPACE}/install/bin:$PATH
+        export LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib:$LD_LIBRARY_PATH
+        ./configure CXX=mpiCC --with-rocm=/opt/rocm
+        make -j$(nproc)
+	pwd
+    - name: Build hip-mpi-testsuite no UCX
+      run: |
+        pwd
+        export PATH=${GITHUB_WORKSPACE}/install/bin:$PATH
+        export LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib:$LD_LIBRARY_PATH
+        ./scripts/run_all_no_ucx.sh
+
