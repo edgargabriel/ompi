@@ -29,6 +29,7 @@ jobs:
 	pwd
     - name: Build hip-mpi-testsuite no UCX
       run: |
+        cd hip-mpi-testsuite
         pwd
         export PATH=${GITHUB_WORKSPACE}/install/bin:$PATH
         export LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/install/lib:$LD_LIBRARY_PATH
